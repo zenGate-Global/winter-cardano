@@ -1,11 +1,4 @@
-type ScriptInfo = {
-  script_hash: string;
-  creation_tx_hash: string;
-  type: string;
-  value: never;
-  bytes: string;
-  size: number;
-};
+import { ScriptInfo } from '../models/koios.types';
 
 export class Koios {
   private readonly baseUrl: string;
@@ -39,5 +32,4 @@ export class Koios {
       throw error;
     }
   }
-
 }
