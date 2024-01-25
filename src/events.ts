@@ -177,7 +177,7 @@ export class EventFactory {
         {
           inline: this.objectDatum,
         },
-        { lovelace: BigInt(3000000), [`${policyId}${fromText(name)}`]: BigInt(1) }
+        { [`${policyId}${fromText(name)}`]: BigInt(1) }
       )
       .complete();
   }
