@@ -95,7 +95,7 @@ test('Event recreation with multiple inputs sharing common signers should work',
   sharedUtxos.push(...utxos);
 });
 
-test('Event spend should work', async () => {
+test('Event spend with multiple inputs sharing common signers should work', async () => {
   const completeTx = await winterEvent1.spend(
     walletAddress2,
     walletAddress1,
