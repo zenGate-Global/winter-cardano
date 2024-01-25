@@ -13,9 +13,10 @@
   "scripts": {
     "start": "tsdx watch",
     "build": "tsdx build",
-    "format": "prettier --loglevel silent --write src/**/*.ts test/**/*.ts",
+    "format": "prettier --log-level silent --write src/**/*.ts test/**/*.ts",
     "test": "vitest",
-    "lint": "tsdx lint",
+    "fix:lint": "eslint ./ --ext .ts --fix",
+    "test:lint": "eslint ./ --ext .ts",
     "prepare": "tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why"
