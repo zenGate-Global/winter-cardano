@@ -1,7 +1,8 @@
 {
   "version": "0.0.1-alpha",
   "license": "GPL-3.0-only",
-  "main": "dist/index.js",
+  "main": "dist/winter-cardano.cjs.production.min.js",
+  "module": "dist/winter-cardano.esm.js",
   "typings": "dist/index.d.ts",
   "files": [
     "dist",
@@ -28,7 +29,6 @@
   },
   "name": "winter-cardano",
   "description": "TypeScript implementation of the WINTER traceability protocol for Cardano blockchain.",
-  "module": "dist/winter-cardano.esm.js",
   "size-limit": [
     {
       "path": "dist/winter-cardano.cjs.production.min.js",
