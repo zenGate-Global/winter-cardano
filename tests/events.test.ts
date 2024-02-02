@@ -48,7 +48,7 @@ test('Singleton mint should work', async () => {
 });
 
 test('Event recreation should work', async () => {
-  const completeTx = await winterEvent.recreate(walletAddress, sharedUtxos);
+  const completeTx = await winterEvent.recreate(walletAddress, sharedUtxos, ['deadbeef']);
   const signedTx = await completeTx.sign().complete();
   const txHash = await signedTx.submit();
   await winterEvent.waitForTx(txHash);
@@ -66,8 +66,22 @@ test('Event recreation should work', async () => {
 });
 
 test('Event recreation should work repeatedly', async () => {
+  const uniqueHexStrings = [
+    'link1',
+    'link2',
+    'link3',
+    'link4',
+    'link5',
+    'link6',
+    'link7',
+    'link8',
+    'link9',
+    'link10'
+  ].map(fromText);
   for (let i = 0; i < 10; i++) {
-    const completeTx = await winterEvent.recreate(walletAddress, sharedUtxos);
+    const completeTx = await winterEvent.recreate(walletAddress, sharedUtxos, [
+      uniqueHexStrings[i]
+    ]);
     const signedTx = await completeTx.sign().complete();
     const txHash = await signedTx.submit();
     await winterEvent.waitForTx(txHash);

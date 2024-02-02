@@ -192,7 +192,11 @@ export class EventFactory {
     );
   }
 
-  public async recreate(signerAddress: string, utxos: UTxO[]): Promise<TxComplete> {
+  public async recreate(
+    signerAddress: string,
+    utxos: UTxO[],
+    newDataReferences: string[]
+  ): Promise<TxComplete> {
     if (!this.providerSetup || !this.objectContractSetup)
       throw new Error('setProvider and setObjectContract must be called before recreate');
 
@@ -201,7 +205,7 @@ export class EventFactory {
       .collectFrom(utxos, this.recreateRedeemer)
       .addSigner(signerAddress);
 
-    utxos.forEach((utxo) => {
+    utxos.forEach((utxo, index) => {
       let objectDatum;
       try {
         objectDatum = Data.from<ObjectDatum>(
@@ -213,10 +217,15 @@ export class EventFactory {
       } catch (e) {
         throw new Error('issue with datum');
       }
+
+      if (objectDatum!.data_reference === newDataReferences[index]) {
+        throw new Error('data references cannot be the same');
+      }
+
       const newObjectDatum = Data.to<ObjectDatum>(
         {
           protocol_version: objectDatum!.protocol_version,
-          data_reference: objectDatum!.data_reference,
+          data_reference: newDataReferences[index],
           event_creation_info:
             objectDatum!.event_creation_info === ''
               ? utxo.txHash

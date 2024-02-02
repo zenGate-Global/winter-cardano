@@ -78,7 +78,7 @@ test('Singleton mint should work', async () => {
 });
 
 test('Event recreation with multiple inputs sharing common signers should work', async () => {
-  const completeTx = await winterEvent1.recreate(walletAddress1, sharedUtxos);
+  const completeTx = await winterEvent1.recreate(walletAddress1, sharedUtxos, ["deafbeef", "cafebabe"]);
   const signedTx = await completeTx.sign().complete();
   const txHash = await signedTx.submit();
   await winterEvent1.waitForTx(txHash);
