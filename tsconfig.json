@@ -1,31 +1,29 @@
 {
   "compilerOptions": {
-    // "incremental": true,
-    "rootDir": "./src",
-    "strictPropertyInitialization": false,
-    "target": "ESNext",
-    "moduleResolution": "Node",
-    "module": "ESNext",
-    "declaration": true,
-    "inlineSourceMap": false,
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "strict": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "traceResolution": false,
-    "listEmittedFiles": false,
-    "sourceMap": true,
-    "skipLibCheck": true,
-    "listFiles": false,
-    "pretty": true,
-    "lib": ["ESNext", "DOM"],
-    "typeRoots": ["node_modules/@types"],
-    "baseUrl": ".",
-    "paths": {
-      "_test-vectors": ["./packages/_test-vectors/"]
-    }
+
+    "target": "ES2022",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
+    "lib": ["ES2022", "dom"],                                      /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+    "module": "ES2022",                                /* Specify what module code is generated. */
+    "rootDir": "src",                                    /* Specify the root folder within your source files. */
+    "moduleResolution": "node",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+    "resolveJsonModule": true,                           /* Enable importing .json files. */
+    "allowJs": true,                                     /* Allow JavaScript files to be a part of your program. Use the 'checkJS' option to get errors from these files. */
+    "declaration": false,                                 /* Generate .d.ts files from TypeScript and JavaScript files in your project. */
+    "sourceMap": true,                                   /* Create source map files for emitted JavaScript files. */
+    "outDir": "./dist",                                   /* Specify an output folder for all emitted files. */
+    // "noEmit": true,                                   /* Disable emitting files from a compilation. */
+    "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */
+    "forceConsistentCasingInFileNames": true,            /* Ensure that casing is correct in imports. */
+
+    /* Type Checking */
+    "strict": true,                                      /* Enable all strict type-checking options. */
+    "noUnusedLocals": false,
+    "noImplicitAny": true,                               /* Enable error reporting for expressions and declarations with an implied 'any' type. */
+    "strictNullChecks": true,
+    "strictPropertyInitialization": false,             /* Check for class properties that are declared but not set in the constructor. */
+    "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
-  "compileOnSave": false,
-  "exclude": ["**/node_modules", "**/dist", "test"]
+  "include": [
+    "src/**.ts"
+  ]
 }

@@ -1,4 +1,4 @@
-import { ScriptInfo } from '../models/koios.types';
+import type { ScriptInfo } from '../models';
 
 export class Koios {
   private readonly baseUrl: string;

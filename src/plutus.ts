@@ -1,4 +1,4 @@
-import { PlutusJson } from './models/plutus.types';
+import type { PlutusJson } from './models';
 
 export const PLUTUSJSON: PlutusJson = {
   preamble: {

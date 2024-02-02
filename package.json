@@ -1,64 +1,59 @@
 {
-  "version": "0.0.2-alpha",
+  "version": "0.0.14-alpha",
   "license": "GPL-3.0-only",
-  "main": "dist/winter-cardano.cjs.production.min.js",
-  "module": "dist/winter-cardano.esm.js",
-  "typings": "dist/index.d.ts",
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "typings": "./dist/index.d.ts",
   "files": [
-    "dist",
-    "src"
+    "./dist",
+    "./src"
   ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/winter-cardano.cjs",
+      "default": "./dist/winter-cardano.js"
+    }
+  },
   "engines": {
     "node": ">=18"
   },
   "scripts": {
-    "start": "tsdx watch",
-    "build": "tsdx build",
-    "format": "prettier --log-level silent --write src/**/*.ts test/**/*.ts",
+    "clean": "rm -r dist/*",
+    "build": "vite build",
+    "lint": "tsdx lint src",
+    "format": "prettier --log-level log --write src/**/*.ts tests/**/*.ts",
     "test": "vitest run",
     "fix:lint": "eslint ./ --ext .ts --fix",
     "test:lint": "eslint ./ --ext .ts",
-    "prepare": "tsdx build",
-    "size": "size-limit",
-    "analyze": "size-limit --why"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "tsdx lint"
-    }
+    "release": "npm run build && npm publish"
   },
   "name": "winter-cardano",
+  "author": "Zengate",
   "description": "TypeScript implementation of the WINTER traceability protocol for Cardano blockchain.",
-  "size-limit": [
-    {
-      "path": "dist/winter-cardano.cjs.production.min.js",
-      "limit": "10 KB"
-    },
-    {
-      "path": "dist/winter-cardano.esm.js",
-      "limit": "10 KB"
-    }
-  ],
   "devDependencies": {
-    "@size-limit/preset-small-lib": "^8.2.6",
     "@types/node": "^20.10.7",
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/parser": "^6.18.0",
+    "esbuild": "^0.20.0",
     "eslint": "^8.56.0",
-    "eslint-config-prettier": "^9.0.0",
+    "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-eslint-comments": "^3.2.0",
     "eslint-plugin-functional": "^6.0.0",
-    "eslint-plugin-import": "^2.29.0",
-    "husky": "^8.0.3",
+    "eslint-plugin-import": "^2.29.1",
     "prettier": "^3.0.3",
-    "size-limit": "^8.2.6",
-    "tsdx": "^0.14.1",
-    "tslib": "^2.6.1",
+    "rollup": "^4.9.6",
+    "rollup-plugin-dts": "^6.1.0",
+    "rollup-plugin-esbuild": "^6.1.1",
     "typescript": "^5.3.3",
     "typescript-eslint-parser": "^22.0.0",
-    "vitest": "^0.34.2"
+    "vite": "^5.0.12",
+    "vite-plugin-dts": "^3.7.2",
+    "vite-tsconfig-paths": "^4.3.1",
+    "vitest": "^1.2.2"
   },
   "dependencies": {
-    "lucid-cardano": "^0.10.7"
+    "lucid-cardano": "^0.10.7",
+    "tsx": "^4.7.0"
   }
 }

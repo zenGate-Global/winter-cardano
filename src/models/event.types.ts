@@ -1,4 +1,4 @@
-import { MintingPolicy, SpendingValidator } from 'lucid-cardano';
+import type { MintingPolicy, SpendingValidator } from 'lucid-cardano';
 
 export interface ObjectDatumParameters {
   protocolVersion: bigint;

@@ -5,19 +5,19 @@ import {
   Data,
   fromText,
   Lucid,
-  MintingPolicy,
-  Network,
-  OutRef,
-  PrivateKey,
+  type MintingPolicy,
+  type Network,
+  type OutRef,
+  type PrivateKey,
   Provider,
-  SpendingValidator,
+  type SpendingValidator,
   TxComplete,
-  UTxO
+  type UTxO
 } from 'lucid-cardano';
 import { WINTER_FEE, WINTER_FEE_ADDRESS_MAINNET, WINTER_FEE_ADDRESS_TESTNET } from './fee';
 import { Koios } from './koios/api';
-import { ObjectDatumParameters, Seed, Validators } from './models/event.types';
-import { PlutusJson } from './models/plutus.types';
+import type { ObjectDatumParameters, Seed, Validators } from './models';
+import type { PlutusJson } from './models';
 import { PLUTUSJSON } from './plutus';
 
 const ObjectDatum = Data.Object({
