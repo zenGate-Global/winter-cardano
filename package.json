@@ -1,5 +1,5 @@
 {
-  "version": "0.0.1-alpha",
+  "version": "0.0.1",
   "license": "GPL-3.0-only",
   "main": "dist/winter-cardano.cjs.production.min.js",
   "module": "dist/winter-cardano.esm.js",
