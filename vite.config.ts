@@ -31,9 +31,5 @@ export default defineConfig(({ mode }) => ({
     },
     test: {
         includeSource: ['src/**/*.{js,ts}'],
-        coverage: {
-            enabled: true,
-            reporter: ['html', 'json', 'text'],
-        },
     },
 }))
