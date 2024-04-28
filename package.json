@@ -1,5 +1,5 @@
 {
-  "version": "0.0.16-alpha",
+  "version": "0.0.19-alpha",
   "license": "GPL-3.0-only",
   "type": "module",
   "types": "./dist/index.d.ts",
@@ -28,10 +28,11 @@
     "test:lint": "eslint ./ --ext .ts",
     "release": "npm run build && npm publish"
   },
-  "name": "winter-cardano",
+  "name": "winter-cardano-mesh",
   "author": "Zengate",
   "description": "TypeScript implementation of the WINTER traceability protocol for Cardano blockchain.",
   "devDependencies": {
+    "@types/json-bigint": "^1.0.4",
     "@types/node": "^20.10.7",
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/parser": "^6.18.0",
@@ -53,7 +54,11 @@
     "vitest": "^0.34.2"
   },
   "dependencies": {
-    "lucid-cardano": "^0.10.7",
+    "@meshsdk/core": "^1.5.16",
+    "@meshsdk/mesh-csl": "^0.0.5",
+    "bip39": "^3.1.0",
+    "json-bigint": "^1.0.0",
+    "translucent-cardano": "^0.0.6",
     "tsx": "^4.7.0"
   }
 }

@@ -1,105 +1,111 @@
+import { Data, IEvaluator, IFetcher, ISubmitter, MeshTxBuilder, UTxO } from '@meshsdk/core';
+import { BuilderData } from '@meshsdk/core/dist/transaction/meshTxBuilder/type';
 import {
-  applyDoubleCborEncoding,
   applyParamsToScript,
-  Constr,
-  Data,
-  fromText,
-  Lucid,
-  type MintingPolicy,
-  type Network,
-  type OutRef,
-  type PrivateKey,
-  Provider,
-  type SpendingValidator,
-  TxComplete,
-  type UTxO
-} from 'lucid-cardano';
+  getV2ScriptHash,
+  mConStr0,
+  mConStr1,
+  serializeBech32Address,
+  stringToHex,
+  v2ScriptToBech32
+} from '@meshsdk/mesh-csl';
+import JSONbig from 'json-bigint';
+import { C, fromHex, Network, Data as TData, toHex } from 'translucent-cardano';
 import { WINTER_FEE, WINTER_FEE_ADDRESS_MAINNET, WINTER_FEE_ADDRESS_TESTNET } from './fee';
 import { Koios } from './koios/api';
-import type { ObjectDatumParameters, Seed, Validators } from './models';
-import type { PlutusJson } from './models';
+import type { ObjectDatumParameters, PlutusJson, Seed, Validators } from './models';
 import { PLUTUSJSON } from './plutus';
+import { SeedWallet } from './wallet/seed';
+import { FromSeed, walletFromSeed } from './wallet/wallet';
 
-const ObjectDatum = Data.Object({
-  protocol_version: Data.Integer(),
-  data_reference: Data.Bytes(),
-  event_creation_info: Data.Bytes(),
-  signers: Data.Array(Data.Bytes())
+export function networkToId(network: Network): number {
+  const networkIds: Record<Network, number> = {
+    Preprod: 0,
+    Preview: 1,
+    Mainnet: 2,
+    Custom: 3
+  };
+
+  return networkIds[network] ?? 3;
+}
+
+const ObjectDatum = TData.Object({
+  protocol_version: TData.Integer(),
+  data_reference: TData.Bytes(),
+  event_creation_info: TData.Bytes(),
+  signers: TData.Array(TData.Bytes())
 });
 
-type ObjectDatum = Data.Static<typeof ObjectDatum>;
+type ObjectDatum = TData.Static<typeof ObjectDatum>;
+type ContractType = { type: 'V1' | 'V2'; script: string };
+
 export class EventFactory {
   public readonly feeAddress: string;
+  public readonly provider: IFetcher & ISubmitter & IEvaluator;
   public readonly feeAmount: bigint;
-  public readonly isMainnet: boolean;
   public readonly network: Network;
   public readonly plutusJson: PlutusJson;
   public readonly validators: Validators;
-  public singletonContract: MintingPolicy;
-  public objectEventContract: SpendingValidator;
+  public singletonContract: ContractType;
+  public objectEventContract: ContractType;
   public objectEventContractAddress: string;
-  public objectDatum: string;
-  public readonly recreateRedeemer: string;
-  public readonly spendRedeemer: string;
-  public readonly mintRedeemer: string;
-  public readonly burnRedeemer: string;
-  private lucid: Lucid;
-  private providerSetup: boolean = false;
+  public objectDatum: BuilderData;
+  public readonly recreateRedeemer: Data;
+  public readonly spendRedeemer: Data;
+  public readonly mintRedeemer: Data;
+  public readonly burnRedeemer: Data;
   private objectContractSetup: boolean = false;
+  public readonly wallet: FromSeed;
+  public readonly seedWallet: SeedWallet;
 
-  constructor(network: Network) {
+  constructor(network: Network, provider: IFetcher & ISubmitter & IEvaluator, seed: Seed) {
     this.network = network;
-    this.isMainnet = network === 'Mainnet';
-    this.feeAddress = this.isMainnet ? WINTER_FEE_ADDRESS_MAINNET : WINTER_FEE_ADDRESS_TESTNET;
+    this.provider = provider;
+    this.wallet = walletFromSeed(seed.seed, seed.options);
+    this.seedWallet = new SeedWallet(seed.seed, network, provider, seed.options);
+    this.feeAddress =
+      networkToId(network) === 2 ? WINTER_FEE_ADDRESS_MAINNET : WINTER_FEE_ADDRESS_TESTNET;
     this.feeAmount = WINTER_FEE;
     this.plutusJson = PLUTUSJSON;
     this.validators = {
       objectEvent: {
-        type: 'PlutusV2',
-        script: this.plutusJson.validators[0].compiledCode
+        script: this.plutusJson.validators[0].compiledCode,
+        version: 'V2'
       },
       singleton: {
-        type: 'PlutusV2',
-        script: this.plutusJson.validators[1].compiledCode
+        script: this.plutusJson.validators[1].compiledCode,
+        version: 'V2'
       }
     };
-    this.recreateRedeemer = Data.to(new Constr(0, []));
-    this.mintRedeemer = Data.to(new Constr(0, []));
-    this.spendRedeemer = Data.to(new Constr(1, []));
-    this.burnRedeemer = Data.to(new Constr(1, []));
-  }
+    this.recreateRedeemer = mConStr0([]);
+    this.mintRedeemer = mConStr0([]);
+    this.spendRedeemer = mConStr1([]);
+    this.burnRedeemer = mConStr1([]);
 
-  public async setProvider(
-    provider: Provider,
-    seed?: Seed,
-    privateKey?: PrivateKey
-  ): Promise<this> {
-    if (!seed && !privateKey) throw new Error('either seed or privateKey must be set');
-    this.lucid = await Lucid.new(provider, this.network);
-    if (seed) {
-      this.lucid.selectWalletFromSeed(seed.seed, seed.options);
-    } else if (privateKey) {
-      this.lucid.selectWalletFromPrivateKey(privateKey);
-    }
-    this.providerSetup = true;
-    return this;
+    const paymentCredential = serializeBech32Address(this.feeAddress).pubKeyHash;
+
+    const serializedPaymentCredential = JSON.stringify({
+      constructor: 0,
+      fields: [{ bytes: paymentCredential }]
+    });
+
+    const serializedFeeAmount = JSONbig.stringify({ int: this.feeAmount });
+    const objectEventBytes = applyParamsToScript(this.validators.objectEvent.script, [
+      serializedPaymentCredential,
+      serializedFeeAmount
+    ]);
+    this.objectEventContract = {
+      type: 'V2',
+      script: objectEventBytes
+    };
+    this.objectEventContractAddress = v2ScriptToBech32(
+      objectEventBytes,
+      undefined,
+      networkToId(this.network)
+    );
   }
 
   public async setObjectContract(objectDatumParameters: ObjectDatumParameters): Promise<this> {
-    if (!this.providerSetup) throw new Error('setProvider must be called before setObjectContract');
-
-    const serializedPaymentCredential = new Constr(0, [
-      this.lucid.utils.getAddressDetails(this.feeAddress).paymentCredential!.hash
-    ]);
-    const objectEventBytes = applyParamsToScript(this.validators.objectEvent.script, [
-      serializedPaymentCredential,
-      this.feeAmount
-    ]);
-    this.objectEventContract = {
-      type: 'PlutusV2',
-      script: objectEventBytes
-    };
-    this.objectEventContractAddress = this.lucid.utils.validatorToAddress(this.objectEventContract);
     this.objectDatum = EventFactory.getObjectDatum(
       objectDatumParameters.protocolVersion,
       objectDatumParameters.dataReference,
@@ -111,66 +117,88 @@ export class EventFactory {
   }
 
   public async getWalletUtxos(): Promise<UTxO[]> {
-    if (!this.providerSetup) throw new Error('setProvider must be called before getWalletUtxos');
-    return this.lucid.wallet.getUtxos();
+    const walletAddress = await this.getWalletAddress();
+    return this.getAddressUtxos(walletAddress);
   }
 
   public async getAddressUtxos(address: string): Promise<UTxO[]> {
-    if (!this.providerSetup) throw new Error('setProvider must be called before getAddressUtxos');
-    return this.lucid.utxosAt(address);
+    return this.provider.fetchAddressUTxOs(address);
   }
 
   public async getWalletAddress(): Promise<string> {
-    if (!this.providerSetup) throw new Error('setProvider must be called before getWalletAddress');
-    return this.lucid.wallet.address();
+    return this.seedWallet.address();
   }
 
-  public async getUtxosByOutRef(outRefs: OutRef[]): Promise<UTxO[]> {
-    if (!this.providerSetup) throw new Error('setProvider must be called before getUtxosByOutRef');
-    return this.lucid.utxosByOutRef(outRefs);
+  public async getUtxosByOutRef(
+    outRefs: { txHash: string; outputIndex: number }[]
+  ): Promise<UTxO[]> {
+    const groupedOutRefs: { [txHash: string]: number[] } = {};
+    outRefs.forEach((ref) => {
+      if (groupedOutRefs[ref.txHash]) {
+        groupedOutRefs[ref.txHash].push(ref.outputIndex);
+      } else {
+        groupedOutRefs[ref.txHash] = [ref.outputIndex];
+      }
+    });
+
+    const promises = Object.entries(groupedOutRefs).map(async ([txHash, outputIndexes]) => {
+      const utxos = await this.provider.fetchUTxOs(txHash);
+      return utxos.filter((utxo) => outputIndexes.includes(utxo.input.outputIndex));
+    });
+
+    const utxos = await Promise.all(promises);
+    return utxos.flat();
   }
 
   public getAddressPK(address: string): string {
-    if (!this.providerSetup) throw new Error('setProvider must be called before getAddressPK');
-    return this.lucid.utils.getAddressDetails(address).paymentCredential!.hash;
+    return serializeBech32Address(address).pubKeyHash;
   }
 
   public async waitForTx(txHash: string): Promise<boolean> {
-    if (!this.providerSetup) throw new Error('setProvider must be called before waitForTx');
-    return this.lucid.awaitTx(txHash);
+    return true;
   }
 
-  public async mintSingleton(name: string, utxos: UTxO[]): Promise<TxComplete> {
-    if (!this.providerSetup || !this.objectContractSetup)
-      throw new Error('setProvider and setObjectContract must be called before mintSingleton');
+  public async mintSingleton(name: string, utxos: UTxO[]): Promise<C.Transaction> {
+    if (!this.objectContractSetup)
+      throw new Error('setObjectContract must be called before mintSingleton');
 
-    const outRef = new Constr(0, [new Constr(0, [utxos[0].txHash]), BigInt(utxos[0].outputIndex)]);
+    const outRef = JSONbig.stringify({
+      constructor: 0,
+      fields: [
+        { constructor: 0, fields: [{ bytes: utxos[0].input.txHash }] },
+        { int: BigInt(utxos[0].input.outputIndex) }
+      ]
+    });
+    const encodedName = JSON.stringify({ bytes: stringToHex(name) });
 
     const singletonBytes = applyParamsToScript(this.validators.singleton.script, [
-      fromText(name),
+      encodedName,
       outRef
     ]);
 
-    this.singletonContract = { type: 'PlutusV2', script: applyDoubleCborEncoding(singletonBytes) };
+    this.singletonContract = { type: 'V2', script: singletonBytes };
 
-    const policyId = this.lucid.utils.validatorToScriptHash({
-      type: 'PlutusV2',
-      script: singletonBytes
-    });
+    const policyId = getV2ScriptHash(singletonBytes);
 
-    return this.lucid
-      .newTx()
-      .collectFrom(utxos)
-      .attachMintingPolicy(this.singletonContract)
-      .mintAssets({ [`${policyId}${fromText(name)}`]: BigInt(1) }, this.mintRedeemer)
-      .payToContract(
-        this.objectEventContractAddress,
-        {
-          inline: this.objectDatum
-        },
-        { [`${policyId}${fromText(name)}`]: BigInt(1) }
-      )
-      .complete();
+    const txBuilder = new MeshTxBuilder({ fetcher: this.provider, submitter: this.provider });
+
+    const tx = txBuilder
+      .selectUtxosFrom(utxos)
+      .mintPlutusScriptV2()
+      .mint('1', policyId, stringToHex(name))
+      .mintingScript(this.singletonContract.script, this.singletonContract.type)
+      .mintRedeemerValue(mConStr0([]))
+      .txOut(this.objectEventContractAddress, [
+        { unit: policyId + stringToHex(name), quantity: '1' }
+      ])
+      .txOutInlineDatumValue(this.objectDatum.content, this.objectDatum.type)
+      .changeAddress(await this.getWalletAddress());
+
+    utxos.forEach((u) => tx.txInCollateral(u.input.txHash, u.input.outputIndex));
+
+    const finalTx = await tx.complete();
+
+    return this.toTranslucentTransaction(finalTx.completeSigning());
   }
 
   public static getObjectDatum(
@@ -178,38 +206,40 @@ export class EventFactory {
     dataReference: string,
     eventCreationInfo: string,
     signers: string[]
-  ): string {
-    return Data.to<ObjectDatum>(
-      {
-        protocol_version: protocolVersion,
-        data_reference: dataReference,
-        event_creation_info: eventCreationInfo,
-        signers: signers
-      },
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      ObjectDatum
-    );
+  ): BuilderData {
+    const data = {
+      constructor: 0,
+      fields: [
+        { int: protocolVersion },
+        { bytes: dataReference },
+        { bytes: eventCreationInfo },
+        { list: signers.map((key) => ({ bytes: key })) }
+      ]
+    };
+    return {
+      type: 'JSON',
+      content: JSONbig.stringify(data)
+    };
   }
 
   public async recreate(
     signerAddress: string,
+    walletUtxos: UTxO[],
     utxos: UTxO[],
     newDataReferences: string[]
-  ): Promise<TxComplete> {
-    if (!this.providerSetup || !this.objectContractSetup)
-      throw new Error('setProvider and setObjectContract must be called before recreate');
+  ): Promise<C.Transaction> {
+    const txBuilder = new MeshTxBuilder({ fetcher: this.provider, submitter: this.provider });
 
-    const tx = await this.lucid
-      .newTx()
-      .collectFrom(utxos, this.recreateRedeemer)
-      .addSigner(signerAddress);
+    const tx = txBuilder.selectUtxosFrom(walletUtxos);
 
     utxos.forEach((utxo, index) => {
       let objectDatum;
       try {
-        objectDatum = Data.from<ObjectDatum>(
-          utxo.datum!,
+        if (!utxo.output.plutusData) {
+          throw new Error();
+        }
+        objectDatum = TData.from<ObjectDatum>(
+          utxo.output.plutusData,
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-expect-error
           ObjectDatum
@@ -222,13 +252,13 @@ export class EventFactory {
         throw new Error('data references cannot be the same');
       }
 
-      const newObjectDatum = Data.to<ObjectDatum>(
+      const newObjectDatum = TData.to<ObjectDatum>(
         {
           protocol_version: objectDatum!.protocol_version,
           data_reference: newDataReferences[index],
           event_creation_info:
             objectDatum!.event_creation_info === ''
-              ? utxo.txHash
+              ? utxo.input.txHash
               : objectDatum!.event_creation_info,
           signers: objectDatum!.signers
         },
@@ -236,44 +266,59 @@ export class EventFactory {
         // @ts-expect-error
         ObjectDatum
       );
-      tx.payToContract(
-        utxo.address,
+      const out = [
         {
-          inline: newObjectDatum
-        },
-        utxo.assets
-      );
+          unit: utxo.output.amount.filter((t) => t.unit !== 'lovelace')[0].unit,
+          quantity: utxo.output.amount.filter((t) => t.unit !== 'lovelace')[0].quantity
+        }
+      ];
+      tx.spendingPlutusScriptV2()
+        .txIn(utxo.input.txHash, utxo.input.outputIndex)
+        .txInInlineDatumPresent()
+        .txInRedeemerValue(mConStr0([]))
+        .txInScript(this.objectEventContract.script)
+        .requiredSignerHash(this.getAddressPK(signerAddress))
+        .txOut(utxo.output.address, out)
+        .txOutInlineDatumValue(newObjectDatum, 'CBOR');
     });
 
-    return tx
-      .payToAddress(this.isMainnet ? WINTER_FEE_ADDRESS_MAINNET : WINTER_FEE_ADDRESS_TESTNET, {
-        lovelace: WINTER_FEE
-      })
-      .attachSpendingValidator(this.objectEventContract)
+    walletUtxos.forEach((u) => tx.txInCollateral(u.input.txHash, u.input.outputIndex));
+
+    const finalTx = await tx
+      .txOut(this.feeAddress, [{ unit: 'lovelace', quantity: this.feeAmount.toString() }])
+      .changeAddress(await this.getWalletAddress())
       .complete();
+
+    return this.toTranslucentTransaction(finalTx.completeSigning());
   }
 
   public async spend(
     recipientAddress: string,
     signerAddress: string,
+    walletUtxos: UTxO[],
     utxos: UTxO[],
     KOIOS_URL?: string,
-    singletonContracts?: MintingPolicy[]
-  ) {
-    if (!this.providerSetup || !this.objectContractSetup)
-      throw new Error('setProvider and setObjectContract must be called before spend');
-
+    singletonContracts?: ContractType
+  ): Promise<C.Transaction> {
     if (!KOIOS_URL && !singletonContracts)
       throw new Error('either KOIOS_URL or singletonContracts must be provided');
 
     const cardanoKoiosClient = KOIOS_URL ? new Koios(KOIOS_URL) : undefined;
 
-    const tx = await this.lucid.newTx().collectFrom(utxos, this.spendRedeemer);
+    const txBuilder = new MeshTxBuilder({ fetcher: this.provider, submitter: this.provider, evaluator: this.provider });
+
+    const tx = txBuilder
+      .selectUtxosFrom(walletUtxos)
+      .requiredSignerHash(serializeBech32Address(signerAddress).pubKeyHash);
 
     for (let index = 0; index < utxos.length; index++) {
+      // just checks for valid datum structure, doesnt actually use the value
       try {
-        Data.from<ObjectDatum>(
-          utxos[index].datum!,
+        if (!utxos[index].output.plutusData) {
+          throw new Error();
+        }
+        TData.from<ObjectDatum>(
+          utxos[index].output.plutusData!,
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-expect-error
           ObjectDatum
@@ -282,30 +327,55 @@ export class EventFactory {
         throw new Error('issue with datum');
       }
 
-      const tokenId = Object.keys(utxos[index].assets).filter((k) => k !== 'lovelace')[0];
-      // const tokenName = tokenId.substring(56);
+      const tokenId = utxos[index].output.amount.filter((k) => k.unit !== 'lovelace')[0].unit;
       const policyId = tokenId.substring(0, 56);
+      const tokenName = tokenId.substring(56);
 
       const scriptBytes = cardanoKoiosClient
         ? (await cardanoKoiosClient.scriptInfo([policyId]))[0].bytes
-        : singletonContracts![index].script;
+        : singletonContracts!.script;
 
-      const validator = {
-        type: 'PlutusV2',
-        script: scriptBytes
+      const mintingScript = {
+        type: 'V2',
+        script: applyParamsToScript(scriptBytes, [])
       };
 
-      tx.payToAddress(recipientAddress, { lovelace: utxos[index].assets.lovelace })
-        .attachMintingPolicy(validator as never)
-        .mintAssets({ [tokenId]: BigInt(-1) }, this.burnRedeemer);
+      tx.spendingPlutusScriptV2()
+        .txIn(utxos[index].input.txHash, utxos[index].input.outputIndex) // validator input which contains token
+        .txInInlineDatumPresent()
+        .txInRedeemerValue(mConStr1([]))
+        .txInScript(this.objectEventContract.script)
+        .mintPlutusScriptV2()
+        .mint('-1', policyId, tokenName)
+        .mintingScript(mintingScript.script)
+        .mintRedeemerValue(mConStr1([]))
+        .txOut(recipientAddress, []);
     }
 
-    return tx
-      .addSigner(signerAddress)
-      .payToAddress(this.isMainnet ? WINTER_FEE_ADDRESS_MAINNET : WINTER_FEE_ADDRESS_TESTNET, {
-        lovelace: WINTER_FEE
-      })
-      .attachSpendingValidator(this.objectEventContract)
+    walletUtxos.forEach((u) => tx.txInCollateral(u.input.txHash, u.input.outputIndex));
+
+    const finalTx = await tx
+      .txOut(this.feeAddress, [{ unit: 'lovelace', quantity: this.feeAmount.toString() }])
+      .changeAddress(await this.getWalletAddress())
       .complete();
+
+    return this.toTranslucentTransaction(finalTx.completeSigning());
+  }
+
+  private toTranslucentTransaction(txHex: string): C.Transaction {
+    return C.Transaction.from_bytes(fromHex(txHex));
+  }
+
+  public async signTx(tx: C.Transaction): Promise<string> {
+    const witnessSet = await this.seedWallet.signTx(tx);
+    const witnessSetBuilder = C.TransactionWitnessSetBuilder.new();
+    witnessSetBuilder.add_existing(witnessSet);
+    witnessSetBuilder.add_existing(tx.witness_set());
+    const signedTx = C.Transaction.new(tx.body(), witnessSetBuilder.build(), tx.auxiliary_data());
+    return toHex(signedTx.to_bytes());
+  }
+
+  public async submitTx(tx: string): Promise<string> {
+    return this.provider.submitTx(tx);
   }
 }

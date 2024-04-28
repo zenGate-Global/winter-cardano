@@ -7,6 +7,11 @@ export interface ObjectDatumParameters {
   signers: Array<string>;
 }
 
+export type Validators = {
+  objectEvent: SpendingValidator;
+  singleton: MintingPolicy;
+};
+
 export interface Seed {
   seed: string;
   options?:
@@ -17,8 +22,3 @@ export interface Seed {
       }
     | undefined;
 }
-
-export type Validators = {
-  objectEvent: SpendingValidator;
-  singleton: MintingPolicy;
-};

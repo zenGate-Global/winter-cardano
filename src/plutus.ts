@@ -4,11 +4,11 @@ export const PLUTUSJSON: PlutusJson = {
   preamble: {
     title: 'zengate/winter_protocol',
     description: "Aiken contracts for project 'zengate/winter_protocol'",
-    version: '0.0.2',
+    version: '0.0.0',
     plutusVersion: 'v2',
     compiler: {
       name: 'Aiken',
-      version: 'v1.0.24-alpha+982eff4'
+      version: 'v1.0.23-alpha+unknown'
     },
     license: 'Apache-2.0'
   },

@@ -4,3 +4,6 @@ node_modules
 dist
 .yarn
 coverage
+/tests/*
+!/tests/success.test.ts
+.idea
