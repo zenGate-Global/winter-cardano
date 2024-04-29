@@ -34,22 +34,17 @@
   resolved "https://registry.yarnpkg.com/@babel/parser/-/parser-7.23.9.tgz#7b903b6149b0f8fa7ad564af646c4c38a77fc44b"
   integrity sha512-9tcKgqKbs3xGJ+NtKF2ndOBBLVwPjl1SHxPQkd36r3Dlirw3xWUeGaTbqr7uGZcTaxkVNwc+03SVP7aCdWrTlA==
 
-"@dcspark/cardano-multiplatform-lib-browser@^3.1.2":
-  version "3.1.2"
-  resolved "https://registry.yarnpkg.com/@dcspark/cardano-multiplatform-lib-browser/-/cardano-multiplatform-lib-browser-3.1.2.tgz#1495d57b6d129c50a87bc838c11d0b7d7ad6939d"
-  integrity sha512-BDIF33nqEKAGn72+ESD1fLgnWCZJbPWnVKHr0cy7Al2zhvM30rGsajcJNHLPh2XXZQh1H35fBiHHR2uUyZRRpw==
-
 "@dcspark/cardano-multiplatform-lib-nodejs@^3.1.2":
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/@dcspark/cardano-multiplatform-lib-nodejs/-/cardano-multiplatform-lib-nodejs-3.1.2.tgz#2f53bb877133fd2919b5f3c3f8c20f58b061078d"
   integrity sha512-bfFI7ljC8El+yj4kG2G7GXcoHHhWJyJKonJ64H3Kcbns4+tHOTy525d1q/u4+hG+G42JPw4Zj5CFIBLv5GLMxg==
 
-"@emurgo/cardano-message-signing-browser@1.0.1", "@emurgo/cardano-message-signing-browser@^1.0.1":
+"@emurgo/cardano-message-signing-browser@1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@emurgo/cardano-message-signing-browser/-/cardano-message-signing-browser-1.0.1.tgz#fb0a481575131d15bf15bb8781cb03bd3f7d56b0"
   integrity sha512-yC4Ymq44WR0bXO1wzxCoyc2W/RD1KSAla0oYhin7IYoVkp2raGp8wt7QNF4pDdNnTcejn5fyPyYY9dL4666H1w==
 
-"@emurgo/cardano-message-signing-nodejs@1.0.1", "@emurgo/cardano-message-signing-nodejs@^1.0.1":
+"@emurgo/cardano-message-signing-nodejs@1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@emurgo/cardano-message-signing-nodejs/-/cardano-message-signing-nodejs-1.0.1.tgz#b2fa1f7541055a6c4b8e805492b1a9362bea5835"
   integrity sha512-PoKh1tQnJX18f8iEr8Jk1KXxKCn9eqaSslMI1pyOJvYRJhQVDLCh0+9YReufjp0oFJIY1ShcrR+4/WnECVZUKQ==
@@ -597,10 +592,10 @@
   resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.27.8.tgz#6667fac16c436b5434a387a34dedb013198f6e6e"
   integrity sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==
 
-"@sinclair/typebox@^0.31.28":
-  version "0.31.28"
-  resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.31.28.tgz#b68831e7bc7d09daac26968ea32f42bedc968ede"
-  integrity sha512-/s55Jujywdw/Jpan+vsy6JZs1z2ZTGxTmbZTPiuSL2wz9mfzA2gN1zzaqmvfi4pq+uOt7Du85fkiwv5ymW84aQ==
+"@sinclair/typebox@^0.32.27":
+  version "0.32.27"
+  resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.32.27.tgz#4cf1c777318c482da530cc667a1eeaaefcd2c521"
+  integrity sha512-JHRrubCKiXi6VKlbBTpTQnExkUFasPMIaXCJYJhqVBGLliQVt1yBZZgiZo3/uSmvAdXlIIdGoTAT6RB09L0QqA==
 
 "@types/argparse@1.0.38":
   version "1.0.38"
@@ -1200,16 +1195,6 @@ concat-map@0.0.1:
   resolved "https://registry.yarnpkg.com/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
   integrity sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==
 
-convert-hex@~0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/convert-hex/-/convert-hex-0.1.0.tgz#08c04568922c27776b8a2e81a95d393362ea0b65"
-  integrity sha512-w20BOb1PiR/sEJdS6wNrUjF5CSfscZFUp7R9NSlXH8h2wynzXVEPFPJECAnkNylZ+cvf3p7TyRUHggDmrwXT9A==
-
-convert-string@~0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/convert-string/-/convert-string-0.1.0.tgz#79ce41a9bb0d03bcf72cdc6a8f3c56fbbc64410a"
-  integrity sha512-1KX9ESmtl8xpT2LN2tFnKSbV4NiarbVi8DVb39ZriijvtTklyrT+4dT1wsGMHKD3CJUjXgvJzstm9qL9ICojGA==
-
 create-hash@^1.1.0, create-hash@^1.1.2:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/create-hash/-/create-hash-1.2.0.tgz#889078af11a63756bcfb59bd221996be3a9ef196"
@@ -1651,13 +1636,6 @@ esutils@^2.0.2:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/esutils/-/esutils-2.0.3.tgz#74d2eb4de0b8da1293711910d50775b9b710ef64"
   integrity sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==
-
-fast-check@^3.14.0:
-  version "3.17.2"
-  resolved "https://registry.yarnpkg.com/fast-check/-/fast-check-3.17.2.tgz#5b0ed6a2ff875ec58fef4ddf468b81c93af4d0bc"
-  integrity sha512-+3DPTxtxABLgmmVpYxrash3DHoq0cMa1jjLYNp3qqokKKhqVEaS4lbnaDKqWU5Dd6C2pEudPPBAEEQ9nUou9OQ==
-  dependencies:
-    pure-rand "^6.1.0"
 
 fast-deep-equal@^3.1.1, fast-deep-equal@^3.1.3:
   version "3.1.3"
@@ -2558,11 +2536,6 @@ prettier@^3.0.3:
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.2.4.tgz#4723cadeac2ce7c9227de758e5ff9b14e075f283"
   integrity sha512-FWu1oLHKCrtpO1ypU6J0SbK2d9Ckwysq6bHj/uaCP26DxrPpppCLQRGVuqAxSTvhF00AcvDRyYrLNW7ocBhFFQ==
 
-prettier@^3.1.1:
-  version "3.2.5"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.2.5.tgz#e52bc3090586e824964a8813b09aba6233b28368"
-  integrity sha512-3/GWa9aOC0YeD7LUfvOG2NiDyhOWRvt1k+rcKhOuYnMY24iiCphgneUfJDyFXd6rZCAnuLBv6UeAULtrhT/F4A==
-
 pretty-format@^29.5.0:
   version "29.7.0"
   resolved "https://registry.yarnpkg.com/pretty-format/-/pretty-format-29.7.0.tgz#ca42c758310f365bfa71a0bda0a807160b776812"
@@ -2581,11 +2554,6 @@ punycode@^2.1.0:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.3.1.tgz#027422e2faec0b25e1549c3e1bd8309b9133b6e5"
   integrity sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==
-
-pure-rand@^6.1.0:
-  version "6.1.0"
-  resolved "https://registry.yarnpkg.com/pure-rand/-/pure-rand-6.1.0.tgz#d173cf23258231976ccbdb05247c9787957604f2"
-  integrity sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA==
 
 queue-microtask@^1.2.2:
   version "1.2.3"
@@ -2786,14 +2754,6 @@ sha.js@^2.4.0, sha.js@^2.4.8:
     inherits "^2.0.1"
     safe-buffer "^5.0.1"
 
-sha256@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/sha256/-/sha256-0.2.0.tgz#73a0b418daab7035bff86e8491e363412fc2ab05"
-  integrity sha512-kTWMJUaez5iiT9CcMv8jSq6kMhw3ST0uRdcIWl3D77s6AsLXNXRp3heeqqfu5+Dyfu4hwpQnMzhqHh8iNQxw0w==
-  dependencies:
-    convert-hex "~0.1.0"
-    convert-string "~0.1.0"
-
 shebang-command@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/shebang-command/-/shebang-command-2.0.0.tgz#ccd0af4f8835fbdc265b82461aaf0c36663f34ea"
@@ -2959,22 +2919,6 @@ to-regex-range@^5.0.1:
   dependencies:
     is-number "^7.0.0"
 
-translucent-cardano@^0.0.6:
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/translucent-cardano/-/translucent-cardano-0.0.6.tgz#14705b170e487c5d533df55506294348310552da"
-  integrity sha512-gwVSAxgXq0ySfllTlI/vakz4+PuUm3PmmgXk9+uemFNTIosmHzEsntrsj7Ri1xUWthcuB+AAdJta/BEYqriv+A==
-  dependencies:
-    "@dcspark/cardano-multiplatform-lib-browser" "^3.1.2"
-    "@dcspark/cardano-multiplatform-lib-nodejs" "^3.1.2"
-    "@emurgo/cardano-message-signing-browser" "^1.0.1"
-    "@emurgo/cardano-message-signing-nodejs" "^1.0.1"
-    "@sinclair/typebox" "^0.31.28"
-    fast-check "^3.14.0"
-    prettier "^3.1.1"
-    sha256 "^0.2.0"
-    uplc-node "^0.0.3"
-    uplc-web "^0.0.3"
-
 ts-api-utils@^1.0.1:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/ts-api-utils/-/ts-api-utils-1.0.3.tgz#f12c1c781d04427313dbac808f453f050e54a331"
@@ -3107,16 +3051,6 @@ universalify@^0.1.0:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/universalify/-/universalify-0.1.2.tgz#b646f69be3942dabcecc9d6639c80dc105efaa66"
   integrity sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==
-
-uplc-node@^0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/uplc-node/-/uplc-node-0.0.3.tgz#f74e8b43b857ad71847c8c187ef14f8355804fe4"
-  integrity sha512-4vr7+RzsRmzS2xuMMMsAs7/VgUzq0Y6ha03IKY1yvTwTz4JQcrlOB0wISzpQ0wJUCxXCirsWKh95BJdrC9OT+w==
-
-uplc-web@^0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/uplc-web/-/uplc-web-0.0.3.tgz#6f1929be6e8900c96ebf6b318829d9325199dccf"
-  integrity sha512-eRdaVvVzQJoEQ8+ZuXPeI47BhuJJG68sKsteJ/E21pIPY2/omZn49wZ6gcmevWoQuzEtKdPUjjPDiToUfWm0kw==
 
 uri-js@^4.2.2:
   version "4.4.1"

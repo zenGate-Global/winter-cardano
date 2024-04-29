@@ -1,22 +1,13 @@
 import { mnemonicToEntropy } from 'bip39';
-import {
-  Address,
-  Network,
-  PrivateKey,
-  RewardAddress,
-  fromHex,
-  C,
-  KeyHash,
-  UTxO,
-  toHex,
-  getAddressDetails
-} from 'translucent-cardano';
+import { KeyHash, Network, UTxO } from '../models';
+import { fromHex, getAddressDetails, toHex } from './utils';
+import { C } from '../core';
 
 export type FromSeed = {
-  address: Address;
-  rewardAddress: RewardAddress | null;
-  paymentKey: PrivateKey;
-  stakeKey: PrivateKey | null;
+  address: string;
+  rewardAddress: string | null;
+  paymentKey: string;
+  stakeKey: string | null;
 };
 
 export function walletFromSeed(
@@ -98,7 +89,7 @@ export function discoverOwnUsedTxKeyHashes(
     );
     if (utxo) {
       const { paymentCredential } = getAddressDetails(utxo.address);
-      usedKeyHashes.push(paymentCredential?.hash!);
+      usedKeyHashes.push(paymentCredential?.hash);
     }
   }
 
@@ -128,13 +119,15 @@ export function discoverOwnUsedTxKeyHashes(
           usedKeyHashes.push(keyHash);
         }
       } else if (cert.kind() === 3) {
-        const poolParams = cert.as_pool_registration()?.pool_params()!;
+        const poolParams = cert.as_pool_registration()?.pool_params();
         const owners = poolParams?.pool_owners();
         if (!owners) break;
         for (let i = 0; i < owners.len(); i++) {
           const keyHash = toHex(owners.get(i).to_bytes());
           usedKeyHashes.push(keyHash);
         }
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         const operator = poolParams.operator().to_hex();
         usedKeyHashes.push(operator);
       } else if (cert.kind() === 4) {
@@ -219,10 +212,12 @@ export function discoverOwnUsedTxKeyHashes(
       );
       if (utxo) {
         const { paymentCredential } = getAddressDetails(utxo.address);
-        usedKeyHashes.push(paymentCredential?.hash!);
+        usedKeyHashes.push(paymentCredential?.hash);
       }
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
   return usedKeyHashes.filter((k) => ownKeyHashes.includes(k));
 }

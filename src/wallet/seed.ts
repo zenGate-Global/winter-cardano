@@ -1,23 +1,10 @@
 import { IFetcher, ISubmitter, UTxO as MeshUTxO } from '@meshsdk/core';
-import {
-  AbstractWallet,
-  Address,
-  C,
-  Delegation,
-  KeyHash,
-  Network,
-  Payload,
-  RewardAddress,
-  SignedMessage,
-  Transaction,
-  TxHash,
-  UTxO,
-  utxoToCore
-} from 'translucent-cardano';
-import { meshUtxoToTransUtxo } from './utils';
+import { C } from '../core';
+import { Delegation, KeyHash, Network, UTxO as TransUtxo } from '../models';
+import { meshUtxoToTransUtxo, utxoToCore } from './utils';
 import { discoverOwnUsedTxKeyHashes, walletFromSeed } from './wallet';
 
-export class SeedWallet implements AbstractWallet {
+export class SeedWallet {
   private address_: string;
   private rewardAddress_: string | null;
   private provider: IFetcher & ISubmitter;
@@ -55,15 +42,15 @@ export class SeedWallet implements AbstractWallet {
     };
   }
 
-  async address(): Promise<Address> {
+  async address(): Promise<string> {
     return this.address_;
   }
   // deno-lint-ignore require-await
-  async rewardAddress(): Promise<RewardAddress | null> {
+  async rewardAddress(): Promise<string | null> {
     return this.rewardAddress_ || null;
   }
   // deno-lint-ignore require-await
-  async getUtxos(): Promise<UTxO[]> {
+  async getUtxos(): Promise<TransUtxo[]> {
     return (await this.provider.fetchAddressUTxOs(this.address_)).map(meshUtxoToTransUtxo);
   }
   async getUtxosCore(): Promise<C.TransactionUnspentOutputs> {
@@ -91,11 +78,7 @@ export class SeedWallet implements AbstractWallet {
     return txWitnessSetBuilder.build();
   }
 
-  async submitTx(tx: Transaction): Promise<TxHash> {
+  async submitTx(tx: string): Promise<string> {
     return await this.provider.submitTx(tx);
-  }
-
-  signMessage(address: Address | RewardAddress, payload: Payload): Promise<SignedMessage> {
-    throw new Error('unimplemented');
   }
 }

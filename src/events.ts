@@ -1,5 +1,4 @@
 import { Data, IEvaluator, IFetcher, ISubmitter, MeshTxBuilder, UTxO } from '@meshsdk/core';
-import { BuilderData } from '@meshsdk/core/dist/transaction/meshTxBuilder/type';
 import {
   applyParamsToScript,
   getV2ScriptHash,
@@ -10,13 +9,21 @@ import {
   v2ScriptToBech32
 } from '@meshsdk/mesh-csl';
 import JSONbig from 'json-bigint';
-import { C, fromHex, Network, Data as TData, toHex } from 'translucent-cardano';
+import { C } from './core';
+import { Data as TData } from './data';
 import { WINTER_FEE, WINTER_FEE_ADDRESS_MAINNET, WINTER_FEE_ADDRESS_TESTNET } from './fee';
 import { Koios } from './koios/api';
-import type { ObjectDatumParameters, PlutusJson, Seed, Validators } from './models';
+import type {
+  BuilderData,
+  Network,
+  ObjectDatumParameters,
+  PlutusJson,
+  Seed,
+  Validators
+} from './models';
 import { PLUTUSJSON } from './plutus';
-import { SeedWallet } from './wallet/seed';
-import { FromSeed, walletFromSeed } from './wallet/wallet';
+import { SeedWallet, fromHex, toHex } from './wallet';
+import { FromSeed, walletFromSeed } from './wallet';
 
 export function networkToId(network: Network): number {
   const networkIds: Record<Network, number> = {
@@ -305,7 +312,11 @@ export class EventFactory {
 
     const cardanoKoiosClient = KOIOS_URL ? new Koios(KOIOS_URL) : undefined;
 
-    const txBuilder = new MeshTxBuilder({ fetcher: this.provider, submitter: this.provider, evaluator: this.provider });
+    const txBuilder = new MeshTxBuilder({
+      fetcher: this.provider,
+      submitter: this.provider,
+      evaluator: this.provider
+    });
 
     const tx = txBuilder
       .selectUtxosFrom(walletUtxos)

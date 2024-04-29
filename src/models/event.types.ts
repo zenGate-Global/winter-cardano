@@ -1,5 +1,3 @@
-import type { MintingPolicy, SpendingValidator } from 'lucid-cardano';
-
 export interface ObjectDatumParameters {
   protocolVersion: bigint;
   dataReference: string;
@@ -8,8 +6,14 @@ export interface ObjectDatumParameters {
 }
 
 export type Validators = {
-  objectEvent: SpendingValidator;
-  singleton: MintingPolicy;
+  objectEvent: {
+    script: string;
+    version: string;
+  };
+  singleton: {
+    script: string;
+    version: string;
+  };
 };
 
 export interface Seed {
