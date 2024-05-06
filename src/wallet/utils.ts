@@ -5,9 +5,7 @@ export const meshUtxoToTransUtxo = (utxo: UTxO): TransUtxo => {
   return {
     txHash: utxo.input.txHash,
     outputIndex: utxo.input.outputIndex,
-    assets: utxo.output.amount.reduce((acc, curr) => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
+    assets: utxo.output.amount.reduce((acc: { [key: string]: bigint }, curr) => {
       acc[curr.unit] = BigInt(curr.quantity);
       return acc;
     }, {}),

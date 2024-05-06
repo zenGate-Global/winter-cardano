@@ -126,9 +126,7 @@ export function discoverOwnUsedTxKeyHashes(
           const keyHash = toHex(owners.get(i).to_bytes());
           usedKeyHashes.push(keyHash);
         }
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        const operator = poolParams.operator().to_hex();
+        const operator = poolParams!.operator().to_hex();
         usedKeyHashes.push(operator);
       } else if (cert.kind() === 4) {
         const operator = cert.as_pool_retirement()!.pool_keyhash().to_hex();
@@ -217,7 +215,5 @@ export function discoverOwnUsedTxKeyHashes(
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
-  return usedKeyHashes.filter((k) => ownKeyHashes.includes(k));
+  return usedKeyHashes.filter((k) => ownKeyHashes.includes(k as string)) as string[];
 }
