@@ -201,11 +201,15 @@ export class EventFactory {
       .txOutInlineDatumValue(this.objectDatum.content, this.objectDatum.type)
       .changeAddress(await this.getWalletAddress());
 
-    utxos.forEach((u) => tx.txInCollateral(u.input.txHash, u.input.outputIndex));
+    utxos.forEach((u) =>
+      tx.txInCollateral(u.input.txHash, u.input.outputIndex, u.output.amount, u.output.address)
+    );
 
     const finalTx = await tx.complete();
+    const completeTx = finalTx.completeSigning();
+    txBuilder.reset();
 
-    return this.toTranslucentTransaction(finalTx.completeSigning());
+    return this.toTranslucentTransaction(completeTx);
   }
 
   public static getObjectDatum(
@@ -289,14 +293,19 @@ export class EventFactory {
         .txOutInlineDatumValue(newObjectDatum, 'CBOR');
     });
 
-    walletUtxos.forEach((u) => tx.txInCollateral(u.input.txHash, u.input.outputIndex));
+    walletUtxos.forEach((u) =>
+      tx.txInCollateral(u.input.txHash, u.input.outputIndex, u.output.amount, u.output.address)
+    );
 
     const finalTx = await tx
       .txOut(this.feeAddress, [{ unit: 'lovelace', quantity: this.feeAmount.toString() }])
       .changeAddress(await this.getWalletAddress())
       .complete();
 
-    return this.toTranslucentTransaction(finalTx.completeSigning());
+    const completeTx = finalTx.completeSigning();
+    txBuilder.reset();
+
+    return this.toTranslucentTransaction(completeTx);
   }
 
   public async spend(
@@ -363,14 +372,19 @@ export class EventFactory {
         .txOut(recipientAddress, []);
     }
 
-    walletUtxos.forEach((u) => tx.txInCollateral(u.input.txHash, u.input.outputIndex));
+    walletUtxos.forEach((u) =>
+      tx.txInCollateral(u.input.txHash, u.input.outputIndex, u.output.amount, u.output.address)
+    );
 
     const finalTx = await tx
       .txOut(this.feeAddress, [{ unit: 'lovelace', quantity: this.feeAmount.toString() }])
       .changeAddress(await this.getWalletAddress())
       .complete();
 
-    return this.toTranslucentTransaction(finalTx.completeSigning());
+    const completeTx = finalTx.completeSigning();
+    txBuilder.reset();
+
+    return this.toTranslucentTransaction(completeTx);
   }
 
   private toTranslucentTransaction(txHex: string): C.Transaction {

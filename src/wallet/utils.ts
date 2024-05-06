@@ -20,9 +20,7 @@ export const meshUtxoToTransUtxo = (utxo: UTxO): TransUtxo => {
 
 export function applyDoubleCborEncoding(script: string): string {
   try {
-    C.PlutusV2Script.from_bytes(
-      C.PlutusV2Script.from_bytes(fromHex(script)).bytes(),
-    );
+    C.PlutusV2Script.from_bytes(C.PlutusV2Script.from_bytes(fromHex(script)).bytes());
     return script;
   } catch (_e) {
     return toHex(C.PlutusV2Script.new(fromHex(script)).to_bytes());
@@ -31,14 +29,10 @@ export function applyDoubleCborEncoding(script: string): string {
 
 export function assetsToValue(assets: Assets): C.Value {
   const multiAsset = C.MultiAsset.new();
-  const lovelace = assets["lovelace"];
+  const lovelace = assets['lovelace'];
   const units = Object.keys(assets);
   const policies = Array.from(
-    new Set(
-      units
-        .filter((unit) => unit !== "lovelace")
-        .map((unit) => unit.slice(0, 56)),
-    ),
+    new Set(units.filter((unit) => unit !== 'lovelace').map((unit) => unit.slice(0, 56)))
   );
   policies.forEach((policy) => {
     const policyUnits = units.filter((unit) => unit.slice(0, 56) === policy);
@@ -46,42 +40,36 @@ export function assetsToValue(assets: Assets): C.Value {
     policyUnits.forEach((unit) => {
       assetsValue.insert(
         C.AssetName.new(fromHex(unit.slice(56))),
-        C.BigNum.from_str(assets[unit].toString()),
+        C.BigNum.from_str(assets[unit].toString())
       );
     });
     multiAsset.insert(C.ScriptHash.from_bytes(fromHex(policy)), assetsValue);
   });
-  const value = C.Value.new(
-    C.BigNum.from_str(lovelace ? lovelace.toString() : "0"),
-  );
+  const value = C.Value.new(C.BigNum.from_str(lovelace ? lovelace.toString() : '0'));
   if (units.length > 1 || !lovelace) value.set_multiasset(multiAsset);
   return value;
 }
 
 export function toScriptRef(script: Script): C.ScriptRef {
   switch (script.type) {
-    case "Native":
+    case 'Native':
       return C.ScriptRef.new(
-        C.Script.new_native(C.NativeScript.from_bytes(fromHex(script.script))),
+        C.Script.new_native(C.NativeScript.from_bytes(fromHex(script.script)))
       );
-    case "PlutusV1":
+    case 'PlutusV1':
       return C.ScriptRef.new(
         C.Script.new_plutus_v1(
-          C.PlutusV1Script.from_bytes(
-            fromHex(applyDoubleCborEncoding(script.script)),
-          ),
-        ),
+          C.PlutusV1Script.from_bytes(fromHex(applyDoubleCborEncoding(script.script)))
+        )
       );
-    case "PlutusV2":
+    case 'PlutusV2':
       return C.ScriptRef.new(
         C.Script.new_plutus_v2(
-          C.PlutusV2Script.from_bytes(
-            fromHex(applyDoubleCborEncoding(script.script)),
-          ),
-        ),
+          C.PlutusV2Script.from_bytes(fromHex(applyDoubleCborEncoding(script.script)))
+        )
       );
     default:
-      throw new Error("No variant matched.");
+      throw new Error('No variant matched.');
   }
 }
 
