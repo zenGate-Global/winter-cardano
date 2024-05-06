@@ -12,17 +12,20 @@ import JSONbig from 'json-bigint';
 import { C } from './core';
 import { Data as TData } from './data';
 import { WINTER_FEE, WINTER_FEE_ADDRESS_MAINNET, WINTER_FEE_ADDRESS_TESTNET } from './fee';
-import { Koios } from './koios/api';
+import { Koios } from './koios';
 import type {
   BuilderData,
+  ContractType,
   Network,
+  ObjectDatum,
   ObjectDatumParameters,
   PlutusJson,
   Seed,
   Validators
 } from './models';
 import { PLUTUSJSON } from './plutus';
-import { SeedWallet, fromHex, toHex } from './wallet';
+import { getEventDatum } from './read';
+import { fromHex, SeedWallet, toHex } from './wallet';
 import { FromSeed, walletFromSeed } from './wallet';
 
 export function networkToId(network: Network): number {
@@ -35,16 +38,6 @@ export function networkToId(network: Network): number {
 
   return networkIds[network] ?? 3;
 }
-
-const ObjectDatum = TData.Object({
-  protocol_version: TData.Integer(),
-  data_reference: TData.Bytes(),
-  event_creation_info: TData.Bytes(),
-  signers: TData.Array(TData.Bytes())
-});
-
-type ObjectDatum = TData.Static<typeof ObjectDatum>;
-type ContractType = { type: 'V1' | 'V2'; script: string };
 
 export class EventFactory {
   public readonly feeAddress: string;
@@ -249,12 +242,7 @@ export class EventFactory {
         if (!utxo.output.plutusData) {
           throw new Error();
         }
-        objectDatum = TData.from<ObjectDatum>(
-          utxo.output.plutusData,
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-expect-error
-          ObjectDatum
-        );
+        objectDatum = getEventDatum(utxo.output.plutusData);
       } catch (e) {
         throw new Error('issue with datum');
       }
@@ -337,12 +325,7 @@ export class EventFactory {
         if (!utxos[index].output.plutusData) {
           throw new Error();
         }
-        TData.from<ObjectDatum>(
-          utxos[index].output.plutusData!,
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-expect-error
-          ObjectDatum
-        );
+        getEventDatum(utxos[index].output.plutusData!);
       } catch (e) {
         throw new Error('issue with datum');
       }

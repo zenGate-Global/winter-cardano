@@ -26,3 +26,5 @@ export interface Seed {
       }
     | undefined;
 }
+
+export type ContractType = { type: 'V1' | 'V2'; script: string };
