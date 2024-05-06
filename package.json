@@ -1,5 +1,5 @@
 {
-  "version": "0.0.28-alpha",
+  "version": "0.0.35-alpha",
   "license": "GPL-3.0-only",
   "type": "module",
   "types": "./dist/index.d.ts",
@@ -11,8 +11,8 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "require": "./dist/winter-cardano.cjs",
-      "default": "./dist/winter-cardano.js"
+      "require": "./dist/winter-cardano-mesh.cjs",
+      "default": "./dist/winter-cardano-mesh.js"
     }
   },
   "engines": {
@@ -49,7 +49,7 @@
     "typescript": "^5.3.3",
     "typescript-eslint-parser": "^22.0.0",
     "vite": "^5.0.12",
-    "vite-plugin-dts": "^3.7.2",
+    "vite-plugin-dts": "^3.9.1",
     "vite-tsconfig-paths": "^4.3.1",
     "vitest": "^0.34.2"
   },
