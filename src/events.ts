@@ -17,7 +17,6 @@ import type {
   BuilderData,
   ContractType,
   Network,
-  ObjectDatum,
   ObjectDatumParameters,
   PlutusJson,
   Seed,
@@ -38,6 +37,16 @@ export function networkToId(network: Network): number {
 
   return networkIds[network] ?? 3;
 }
+
+const ObjectDatum = TData.Object({
+  protocol_version: TData.Integer(),
+  data_reference: TData.Bytes(),
+  event_creation_info: TData.Bytes(),
+  signers: TData.Array(TData.Bytes())
+});
+
+type ObjectDatum = TData.Static<typeof ObjectDatum>;
+
 
 export class EventFactory {
   public readonly feeAddress: string;
