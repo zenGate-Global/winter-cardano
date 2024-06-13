@@ -5,3 +5,4 @@ export * from './fee';
 export * from './plutus';
 export * from './wallet';
 export * from './read';
+export * from './core';
