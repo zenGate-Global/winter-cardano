@@ -6,7 +6,8 @@ import {
   ISubmitter,
   MeshTxBuilder,
   MeshWallet,
-  UTxO
+  UTxO,
+  Network
 } from '@meshsdk/core';
 import {
   applyParamsToScript,
@@ -25,7 +26,6 @@ import { Koios } from './koios';
 import type {
   BuilderData,
   ContractType,
-  Network,
   ObjectDatumParameters,
   PlutusJson,
   Seed,
@@ -78,15 +78,17 @@ export class EventFactory {
 
   constructor(
     provider: IFetcher & ISubmitter & IEvaluator & IListener,
-    networkId: number,
+    network: Network,
     mnemonic: string
   ) {
-    this.feeAddress = networkId === 1 ? WINTER_FEE_ADDRESS_MAINNET : WINTER_FEE_ADDRESS_TESTNET;
-    this.feeAmount = WINTER_FEE;
-
+    this.wallet = getWallet(network, provider, provider, mnemonic);
     this.provider = provider;
-    this.networkId = networkId;
-    this.wallet = getWallet(this.networkId, this.provider, this.provider, mnemonic);
+    this.network = network;
+    this.networkId = networkToId(network);
+
+    this.feeAddress =
+      this.networkId === 1 ? WINTER_FEE_ADDRESS_MAINNET : WINTER_FEE_ADDRESS_TESTNET;
+    this.feeAmount = WINTER_FEE;
 
     this.plutusJson = PLUTUSJSON;
     this.validators = {

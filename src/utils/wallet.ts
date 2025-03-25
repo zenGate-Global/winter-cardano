@@ -1,4 +1,4 @@
-import { IFetcher, ISubmitter, MaestroProvider, MeshWallet, Network } from '@meshsdk/core';
+import { IFetcher, ISubmitter, MeshWallet, Network } from '@meshsdk/core';
 
 export function getWallet(
   network: Network,
