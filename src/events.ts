@@ -47,7 +47,6 @@ const ObjectDatum = TData.Object({
 
 type ObjectDatum = TData.Static<typeof ObjectDatum>;
 
-
 export class EventFactory {
   public readonly feeAddress: string;
   public readonly provider: IFetcher & ISubmitter & IEvaluator;
@@ -195,7 +194,7 @@ export class EventFactory {
       .selectUtxosFrom(utxos)
       .mintPlutusScriptV2()
       .mint('1', policyId, stringToHex(name))
-      .mintingScript(this.singletonContract.script, this.singletonContract.type)
+      .mintingScript(this.singletonContract.script)
       .mintRedeemerValue(mConStr0([]))
       .txOut(this.objectEventContractAddress, [
         { unit: policyId + stringToHex(name), quantity: '1' }
@@ -207,11 +206,11 @@ export class EventFactory {
       tx.txInCollateral(u.input.txHash, u.input.outputIndex, u.output.amount, u.output.address)
     );
 
-    const finalTx = await tx.complete();
-    const completeTx = finalTx.completeSigning();
+    await tx.complete();
+    const signedTx = tx.completeSigning();
     txBuilder.reset();
 
-    return this.toTranslucentTransaction(completeTx);
+    return this.toTranslucentTransaction(signedTx);
   }
 
   public static getObjectDatum(
@@ -294,15 +293,15 @@ export class EventFactory {
       tx.txInCollateral(u.input.txHash, u.input.outputIndex, u.output.amount, u.output.address)
     );
 
-    const finalTx = await tx
+    await tx
       .txOut(this.feeAddress, [{ unit: 'lovelace', quantity: this.feeAmount.toString() }])
       .changeAddress(await this.getWalletAddress())
       .complete();
 
-    const completeTx = finalTx.completeSigning();
+    const signed = tx.completeSigning();
     txBuilder.reset();
 
-    return this.toTranslucentTransaction(completeTx);
+    return this.toTranslucentTransaction(signed);
   }
 
   public async spend(
@@ -368,15 +367,15 @@ export class EventFactory {
       tx.txInCollateral(u.input.txHash, u.input.outputIndex, u.output.amount, u.output.address)
     );
 
-    const finalTx = await tx
+    await tx
       .txOut(this.feeAddress, [{ unit: 'lovelace', quantity: this.feeAmount.toString() }])
       .changeAddress(await this.getWalletAddress())
       .complete();
 
-    const completeTx = finalTx.completeSigning();
+    const signedTx = tx.completeSigning();
     txBuilder.reset();
 
-    return this.toTranslucentTransaction(completeTx);
+    return this.toTranslucentTransaction(signedTx);
   }
 
   private toTranslucentTransaction(txHex: string): C.Transaction {
