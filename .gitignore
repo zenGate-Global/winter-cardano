@@ -7,3 +7,4 @@ coverage
 /tests/*
 !/tests/success.test.ts
 .idea
+.env

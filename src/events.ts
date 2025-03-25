@@ -1,4 +1,13 @@
-import { Data, IEvaluator, IFetcher, ISubmitter, MeshTxBuilder, UTxO } from '@meshsdk/core';
+import {
+  Data,
+  IEvaluator,
+  IFetcher,
+  IListener,
+  ISubmitter,
+  MeshTxBuilder,
+  MeshWallet,
+  UTxO
+} from '@meshsdk/core';
 import {
   applyParamsToScript,
   getV2ScriptHash,
@@ -26,6 +35,7 @@ import { PLUTUSJSON } from './plutus';
 import { getEventDatum } from './read';
 import { fromHex, SeedWallet, toHex } from './wallet';
 import { FromSeed, walletFromSeed } from './wallet';
+import { getWallet } from './utils/wallet';
 
 export function networkToId(network: Network): number {
   const networkIds: Record<Network, number> = {
@@ -47,10 +57,10 @@ const ObjectDatum = TData.Object({
 
 type ObjectDatum = TData.Static<typeof ObjectDatum>;
 
-
 export class EventFactory {
   public readonly feeAddress: string;
-  public readonly provider: IFetcher & ISubmitter & IEvaluator;
+  public readonly provider: IFetcher & ISubmitter & IEvaluator & IListener;
+  public readonly networkId: number;
   public readonly feeAmount: bigint;
   public readonly network: Network;
   public readonly plutusJson: PlutusJson;
@@ -64,17 +74,20 @@ export class EventFactory {
   public readonly mintRedeemer: Data;
   public readonly burnRedeemer: Data;
   private objectContractSetup: boolean = false;
-  public readonly wallet: FromSeed;
-  public readonly seedWallet: SeedWallet;
+  public readonly wallet: MeshWallet;
 
-  constructor(network: Network, provider: IFetcher & ISubmitter & IEvaluator, seed: Seed) {
-    this.network = network;
-    this.provider = provider;
-    this.wallet = walletFromSeed(seed.seed, seed.options);
-    this.seedWallet = new SeedWallet(seed.seed, network, provider, seed.options);
-    this.feeAddress =
-      networkToId(network) === 2 ? WINTER_FEE_ADDRESS_MAINNET : WINTER_FEE_ADDRESS_TESTNET;
+  constructor(
+    provider: IFetcher & ISubmitter & IEvaluator & IListener,
+    networkId: number,
+    mnemonic: string
+  ) {
+    this.feeAddress = networkId === 1 ? WINTER_FEE_ADDRESS_MAINNET : WINTER_FEE_ADDRESS_TESTNET;
     this.feeAmount = WINTER_FEE;
+
+    this.provider = provider;
+    this.networkId = networkId;
+    this.wallet = getWallet(this.networkId, this.provider, this.provider, mnemonic);
+
     this.plutusJson = PLUTUSJSON;
     this.validators = {
       objectEvent: {
@@ -195,7 +208,7 @@ export class EventFactory {
       .selectUtxosFrom(utxos)
       .mintPlutusScriptV2()
       .mint('1', policyId, stringToHex(name))
-      .mintingScript(this.singletonContract.script, this.singletonContract.type)
+      .mintingScript(this.singletonContract.script)
       .mintRedeemerValue(mConStr0([]))
       .txOut(this.objectEventContractAddress, [
         { unit: policyId + stringToHex(name), quantity: '1' }
@@ -207,11 +220,11 @@ export class EventFactory {
       tx.txInCollateral(u.input.txHash, u.input.outputIndex, u.output.amount, u.output.address)
     );
 
-    const finalTx = await tx.complete();
-    const completeTx = finalTx.completeSigning();
+    await tx.complete();
+    const signedTx = tx.completeSigning();
     txBuilder.reset();
 
-    return this.toTranslucentTransaction(completeTx);
+    return this.toTranslucentTransaction(signedTx);
   }
 
   public static getObjectDatum(
@@ -294,15 +307,15 @@ export class EventFactory {
       tx.txInCollateral(u.input.txHash, u.input.outputIndex, u.output.amount, u.output.address)
     );
 
-    const finalTx = await tx
+    await tx
       .txOut(this.feeAddress, [{ unit: 'lovelace', quantity: this.feeAmount.toString() }])
       .changeAddress(await this.getWalletAddress())
       .complete();
 
-    const completeTx = finalTx.completeSigning();
+    const signed = tx.completeSigning();
     txBuilder.reset();
 
-    return this.toTranslucentTransaction(completeTx);
+    return this.toTranslucentTransaction(signed);
   }
 
   public async spend(
@@ -368,15 +381,15 @@ export class EventFactory {
       tx.txInCollateral(u.input.txHash, u.input.outputIndex, u.output.amount, u.output.address)
     );
 
-    const finalTx = await tx
+    await tx
       .txOut(this.feeAddress, [{ unit: 'lovelace', quantity: this.feeAmount.toString() }])
       .changeAddress(await this.getWalletAddress())
       .complete();
 
-    const completeTx = finalTx.completeSigning();
+    const signedTx = tx.completeSigning();
     txBuilder.reset();
 
-    return this.toTranslucentTransaction(completeTx);
+    return this.toTranslucentTransaction(signedTx);
   }
 
   private toTranslucentTransaction(txHex: string): C.Transaction {
