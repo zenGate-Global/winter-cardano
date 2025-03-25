@@ -6,8 +6,9 @@ import {
   ISubmitter,
   MeshTxBuilder,
   MeshWallet,
-  UTxO,
-  Network
+  Network,
+  resolveScriptHash,
+  UTxO
 } from '@meshsdk/core';
 import {
   applyParamsToScript,
@@ -58,23 +59,33 @@ const ObjectDatum = TData.Object({
 type ObjectDatum = TData.Static<typeof ObjectDatum>;
 
 export class EventFactory {
+  // Winter protocol fee information.
   public readonly feeAddress: string;
-  public readonly provider: IFetcher & ISubmitter & IEvaluator & IListener;
-  public readonly networkId: number;
   public readonly feeAmount: bigint;
-  public readonly network: Network;
+
+  // Winter protocol raw Plutus scripts.
   public readonly plutusJson: PlutusJson;
   public readonly validators: Validators;
+
+  // Winter protocol contracts with applied parameters,
+  // specific to this instance of the EventFactory.
   public singletonContract: ContractType;
   public objectEventContract: ContractType;
   public objectEventContractAddress: string;
   public objectDatum: BuilderData;
+
   public readonly recreateRedeemer: Data;
   public readonly spendRedeemer: Data;
   public readonly mintRedeemer: Data;
   public readonly burnRedeemer: Data;
+
   private objectContractSetup: boolean = false;
+
+  // Required EventFactory constructor information.
   public readonly wallet: MeshWallet;
+  public readonly provider: IFetcher & ISubmitter & IEvaluator & IListener;
+  public readonly network: Network;
+  public readonly networkId: number;
 
   constructor(
     provider: IFetcher & ISubmitter & IEvaluator & IListener,
@@ -101,6 +112,7 @@ export class EventFactory {
         version: 'V2'
       }
     };
+
     this.recreateRedeemer = mConStr0([]);
     this.mintRedeemer = mConStr0([]);
     this.spendRedeemer = mConStr1([]);
@@ -200,11 +212,25 @@ export class EventFactory {
       outRef
     ]);
 
+    // We apply parameters to the singleton minting script.
+    const singletonContractWithParamsScriptBytes = applyParamsToScript(
+      this.validators.singleton.script,
+      [
+        
+      ]
+    )
+    
     this.singletonContract = { type: 'V2', script: singletonBytes };
 
     const policyId = getV2ScriptHash(singletonBytes);
 
-    const txBuilder = new MeshTxBuilder({ fetcher: this.provider, submitter: this.provider });
+    const policyId = resolveScriptHash();
+
+    const txBuilder = new MeshTxBuilder({
+      fetcher: this.provider,
+      submitter: this.provider,
+      verbose: true
+    });
 
     const tx = txBuilder
       .selectUtxosFrom(utxos)
