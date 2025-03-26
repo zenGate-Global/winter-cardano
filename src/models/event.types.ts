@@ -1,3 +1,5 @@
+import { PlutusScript } from '@meshsdk/core';
+
 export interface ObjectDatumParameters {
   protocolVersion: bigint;
   dataReference: string;
@@ -6,14 +8,8 @@ export interface ObjectDatumParameters {
 }
 
 export type Validators = {
-  objectEvent: {
-    script: string;
-    version: string;
-  };
-  singleton: {
-    script: string;
-    version: string;
-  };
+  objectEvent: PlutusScript;
+  singleton: PlutusScript;
 };
 
 export interface Seed {

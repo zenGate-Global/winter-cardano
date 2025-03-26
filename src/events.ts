@@ -1,24 +1,29 @@
 import {
-  Data,
+  applyParamsToScript,
+  byteString,
+  conStr0,
+  deserializeAddress,
   IEvaluator,
   IFetcher,
   IListener,
+  integer,
   ISubmitter,
+  list,
   MeshTxBuilder,
   MeshWallet,
   Network,
+  outputReference,
+  PlutusData,
+  PlutusScript,
+  pubKeyAddress,
   resolveScriptHash,
+  serializePlutusScript,
+  stringToHex,
+  tokenName,
+  Transaction,
   UTxO
 } from '@meshsdk/core';
-import {
-  applyParamsToScript,
-  getV2ScriptHash,
-  mConStr0,
-  mConStr1,
-  serializeBech32Address,
-  stringToHex,
-  v2ScriptToBech32
-} from '@meshsdk/mesh-csl';
+import { mConStr0, mConStr1, serializeBech32Address, v2ScriptToBech32 } from '@meshsdk/core-cst';
 import JSONbig from 'json-bigint';
 import { C } from './core';
 import { Data as TData } from './data';
@@ -34,7 +39,7 @@ import type {
 } from './models';
 import { PLUTUSJSON } from './plutus';
 import { getEventDatum } from './read';
-import { fromHex, SeedWallet, toHex } from './wallet';
+import { fromHex, fromText, SeedWallet, toHex } from './wallet';
 import { FromSeed, walletFromSeed } from './wallet';
 import { getWallet } from './utils/wallet';
 
@@ -69,15 +74,15 @@ export class EventFactory {
 
   // Winter protocol contracts with applied parameters,
   // specific to this instance of the EventFactory.
-  public singletonContract: ContractType;
-  public objectEventContract: ContractType;
+  public singletonContract: PlutusScript;
+  public objectEventContract: PlutusScript;
   public objectEventContractAddress: string;
-  public objectDatum: BuilderData;
+  public objectDatum: PlutusData;
 
-  public readonly recreateRedeemer: Data;
-  public readonly spendRedeemer: Data;
-  public readonly mintRedeemer: Data;
-  public readonly burnRedeemer: Data;
+  public readonly recreateRedeemer: PlutusData;
+  public readonly spendRedeemer: PlutusData;
+  public readonly mintRedeemer: PlutusData;
+  public readonly burnRedeemer: PlutusData;
 
   private objectContractSetup: boolean = false;
 
@@ -92,53 +97,62 @@ export class EventFactory {
     network: Network,
     mnemonic: string
   ) {
+    // Store wallet information.
     this.wallet = getWallet(network, provider, provider, mnemonic);
     this.provider = provider;
     this.network = network;
     this.networkId = networkToId(network);
 
+    // Store Winter protocol fees.
     this.feeAddress =
       this.networkId === 1 ? WINTER_FEE_ADDRESS_MAINNET : WINTER_FEE_ADDRESS_TESTNET;
     this.feeAmount = WINTER_FEE;
 
+    // Store Plutus script information.
     this.plutusJson = PLUTUSJSON;
     this.validators = {
       objectEvent: {
-        script: this.plutusJson.validators[0].compiledCode,
+        code: this.plutusJson.validators[0].compiledCode,
         version: 'V2'
       },
       singleton: {
-        script: this.plutusJson.validators[1].compiledCode,
+        code: this.plutusJson.validators[1].compiledCode,
         version: 'V2'
       }
     };
 
-    this.recreateRedeemer = mConStr0([]);
-    this.mintRedeemer = mConStr0([]);
-    this.spendRedeemer = mConStr1([]);
-    this.burnRedeemer = mConStr1([]);
+    // Store empty redeemers.
+    this.recreateRedeemer = conStr0([]);
+    this.mintRedeemer = conStr0([]);
+    this.spendRedeemer = conStr0([]);
+    this.burnRedeemer = conStr0([]);
 
-    const paymentCredential = serializeBech32Address(this.feeAddress).pubKeyHash;
-
-    const serializedPaymentCredential = JSON.stringify({
-      constructor: 0,
-      fields: [{ bytes: paymentCredential }]
-    });
-
-    const serializedFeeAmount = JSONbig.stringify({ int: this.feeAmount });
-    const objectEventBytes = applyParamsToScript(this.validators.objectEvent.script, [
-      serializedPaymentCredential,
-      serializedFeeAmount
-    ]);
-    this.objectEventContract = {
-      type: 'V2',
-      script: objectEventBytes
-    };
-    this.objectEventContractAddress = v2ScriptToBech32(
-      objectEventBytes,
-      undefined,
-      networkToId(this.network)
+    // Apply parameters to the object event script.
+    // a. The first parameter is the payment credential.
+    // b. The second parameter is the fee amount.
+    const pubkeyHashBytes = deserializeAddress(this.feeAddress).pubKeyHash;
+    const paymentCredential = pubKeyAddress(pubkeyHashBytes, undefined, false);
+    const feeAmount = integer(this.feeAmount);
+    const objectEventContractWithParamsScriptBytes = applyParamsToScript(
+      this.validators.objectEvent.code,
+      [paymentCredential, feeAmount],
+      'JSON'
     );
+
+    // We save the contract in the EventFactory as a PlutusScript
+    this.objectEventContract = {
+      version: this.validators.objectEvent.version,
+      code: objectEventContractWithParamsScriptBytes
+    };
+
+    // We save the address of the object event,
+    // which is the Bech32 encoding of the PlutusScript bytes.
+    this.objectEventContractAddress = serializePlutusScript(
+      this.objectEventContract,
+      undefined,
+      this.networkId,
+      false
+    ).address;
   }
 
   public async setObjectContract(objectDatumParameters: ObjectDatumParameters): Promise<this> {
@@ -194,65 +208,74 @@ export class EventFactory {
     return true;
   }
 
-  public async mintSingleton(name: string, utxos: UTxO[]): Promise<C.Transaction> {
+  public async mintSingleton(name: string, utxos: UTxO[]): Promise<string> {
     if (!this.objectContractSetup)
       throw new Error('setObjectContract must be called before mintSingleton');
 
-    const outRef = JSONbig.stringify({
-      constructor: 0,
-      fields: [
-        { constructor: 0, fields: [{ bytes: utxos[0].input.txHash }] },
-        { int: BigInt(utxos[0].input.outputIndex) }
-      ]
-    });
-    const encodedName = JSON.stringify({ bytes: stringToHex(name) });
-
-    const singletonBytes = applyParamsToScript(this.validators.singleton.script, [
-      encodedName,
-      outRef
-    ]);
-
-    // We apply parameters to the singleton minting script.
+    // Apply parameters to the singleton script.
+    // a. The first parameter is the token name of the singleton.
+    // b. The second parameter is the output reference used for the one-shot minting policy.
+    const hexName = stringToHex(name);
+    const tName = tokenName(hexName);
+    const outputRef = outputReference(utxos[0].input.txHash, utxos[0].input.outputIndex);
     const singletonContractWithParamsScriptBytes = applyParamsToScript(
-      this.validators.singleton.script,
-      [
-        
-      ]
-    )
-    
-    this.singletonContract = { type: 'V2', script: singletonBytes };
+      this.validators.singleton.code,
+      [tName, outputRef],
+      'JSON'
+    );
 
-    const policyId = getV2ScriptHash(singletonBytes);
+    // We save the contract in the EventFactory as a PlutusScript.
+    this.singletonContract = {
+      version: this.validators.singleton.version,
+      code: singletonContractWithParamsScriptBytes
+    };
 
-    const policyId = resolveScriptHash();
+    // We generate the policy id from the parameterized script.
+    const policyId = resolveScriptHash(this.singletonContract.code, this.singletonContract.version);
 
+    // We create a transaction builder to build our minting transaction.
     const txBuilder = new MeshTxBuilder({
       fetcher: this.provider,
       submitter: this.provider,
       verbose: true
     });
 
-    const tx = txBuilder
+    // The singleton script does not require any redeemer.
+    txBuilder
       .selectUtxosFrom(utxos)
       .mintPlutusScriptV2()
-      .mint('1', policyId, stringToHex(name))
-      .mintingScript(this.singletonContract.script)
-      .mintRedeemerValue(mConStr0([]))
+      .mint('1', policyId, hexName)
+      .mintingScript(this.singletonContract.code)
+      .mintRedeemerValue(this.mintRedeemer, 'JSON')
       .txOut(this.objectEventContractAddress, [
-        { unit: policyId + stringToHex(name), quantity: '1' }
+        {
+          unit: policyId + hexName,
+          quantity: '1'
+        }
       ])
-      .txOutInlineDatumValue(this.objectDatum.content, this.objectDatum.type)
+      .txOutInlineDatumValue(this.objectDatum, 'JSON')
       .changeAddress(await this.getWalletAddress());
 
+    // All inputs to the transaction will count as collateral utxos.
     utxos.forEach((u) =>
-      tx.txInCollateral(u.input.txHash, u.input.outputIndex, u.output.amount, u.output.address)
+      txBuilder.txInCollateral(
+        u.input.txHash,
+        u.input.outputIndex,
+        u.output.amount,
+        u.output.address
+      )
     );
 
-    await tx.complete();
-    const signedTx = tx.completeSigning();
+    // Complete the transaction building and obtain the unsigned transaction.
+    const unsignedTxHex = await txBuilder.complete();
     txBuilder.reset();
+    return unsignedTxHex;
 
-    return this.toTranslucentTransaction(signedTx);
+    // // Sign the transaction with the wallet associated with the EventFactory.
+    // const signedTx = await this.wallet.signTx(unsignedTx)
+    // txBuilder.reset();
+    // Transaction
+    // return this.toTranslucentTransaction(signedTx);
   }
 
   public static getObjectDatum(
@@ -260,20 +283,13 @@ export class EventFactory {
     dataReference: string,
     eventCreationInfo: string,
     signers: string[]
-  ): BuilderData {
-    const data = {
-      constructor: 0,
-      fields: [
-        { int: protocolVersion },
-        { bytes: dataReference },
-        { bytes: eventCreationInfo },
-        { list: signers.map((key) => ({ bytes: key })) }
-      ]
-    };
-    return {
-      type: 'JSON',
-      content: JSONbig.stringify(data)
-    };
+  ): PlutusData {
+    return conStr0([
+      integer(protocolVersion),
+      byteString(dataReference),
+      byteString(eventCreationInfo),
+      list(signers.map((key) => byteString(key)))
+    ]);
   }
 
   public async recreate(
