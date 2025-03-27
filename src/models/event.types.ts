@@ -2,9 +2,9 @@ import { PlutusScript } from '@meshsdk/core';
 
 export interface ObjectDatumParameters {
   protocolVersion: bigint;
-  dataReference: string;
-  eventCreationInfo: string;
-  signers: Array<string>;
+  dataReferenceHex: string;
+  eventCreationInfoTxHash: string;
+  signersPkHash: Array<string>;
 }
 
 export type Validators = {

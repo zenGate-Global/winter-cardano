@@ -2,9 +2,9 @@ import { IFetcher, ISubmitter, MeshWallet, Network } from '@meshsdk/core';
 
 export function getWallet(
   network: Network,
+  mnemonic: string | string[],
   fetcher: IFetcher,
-  submitter: ISubmitter,
-  mnemonic: string
+  submitter: ISubmitter
 ): MeshWallet {
   const networkId = networkToId(network);
   return new MeshWallet({
@@ -13,7 +13,7 @@ export function getWallet(
     submitter,
     key: {
       type: 'mnemonic',
-      words: mnemonic.split(' ')
+      words: typeof mnemonic === 'string' ? mnemonic.split(' ') : mnemonic
     }
   });
 }

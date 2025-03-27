@@ -3,6 +3,7 @@ import {
   byteString,
   conStr0,
   deserializeAddress,
+  hashByteString,
   IEvaluator,
   IFetcher,
   IListener,
@@ -16,15 +17,13 @@ import {
   PlutusData,
   PlutusScript,
   pubKeyAddress,
+  pubKeyHash,
   resolveScriptHash,
   serializePlutusScript,
   stringToHex,
   tokenName,
-  Transaction,
   UTxO
 } from '@meshsdk/core';
-import { mConStr0, mConStr1, serializeBech32Address, v2ScriptToBech32 } from '@meshsdk/core-cst';
-import JSONbig from 'json-bigint';
 import { C } from './core';
 import { Data as TData } from './data';
 import { WINTER_FEE, WINTER_FEE_ADDRESS_MAINNET, WINTER_FEE_ADDRESS_TESTNET } from './fee';
@@ -41,18 +40,18 @@ import { PLUTUSJSON } from './plutus';
 import { getEventDatum } from './read';
 import { fromHex, fromText, SeedWallet, toHex } from './wallet';
 import { FromSeed, walletFromSeed } from './wallet';
-import { getWallet } from './utils/wallet';
+import { getWallet, networkToId } from './utils/wallet';
 
-export function networkToId(network: Network): number {
-  const networkIds: Record<Network, number> = {
-    Preprod: 0,
-    Preview: 1,
-    Mainnet: 2,
-    Custom: 3
-  };
+// export function networkToId(network: Network): number {
+//   const networkIds: Record<Network, number> = {
+//     Preprod: 0,
+//     Preview: 1,
+//     Mainnet: 2,
+//     Custom: 3
+//   };
 
-  return networkIds[network] ?? 3;
-}
+//   return networkIds[network] ?? 3;
+// }
 
 const ObjectDatum = TData.Object({
   protocol_version: TData.Integer(),
@@ -66,7 +65,7 @@ type ObjectDatum = TData.Static<typeof ObjectDatum>;
 export class EventFactory {
   // Winter protocol fee information.
   public readonly feeAddress: string;
-  public readonly feeAmount: bigint;
+  public readonly feeAmount: number;
 
   // Winter protocol raw Plutus scripts.
   public readonly plutusJson: PlutusJson;
@@ -88,18 +87,21 @@ export class EventFactory {
 
   // Required EventFactory constructor information.
   public readonly wallet: MeshWallet;
-  public readonly provider: IFetcher & ISubmitter & IEvaluator & IListener;
+  public readonly fetcher: IFetcher;
+  public readonly submitter: ISubmitter;
   public readonly network: Network;
   public readonly networkId: number;
 
   constructor(
-    provider: IFetcher & ISubmitter & IEvaluator & IListener,
     network: Network,
-    mnemonic: string
+    mnemonic: string | string[],
+    fetcher: IFetcher,
+    submitter: ISubmitter
   ) {
     // Store wallet information.
-    this.wallet = getWallet(network, provider, provider, mnemonic);
-    this.provider = provider;
+    this.wallet = getWallet(network, mnemonic, fetcher, submitter);
+    this.fetcher = fetcher;
+    this.submitter = submitter;
     this.network = network;
     this.networkId = networkToId(network);
 
@@ -158,12 +160,16 @@ export class EventFactory {
   public async setObjectContract(objectDatumParameters: ObjectDatumParameters): Promise<this> {
     this.objectDatum = EventFactory.getObjectDatum(
       objectDatumParameters.protocolVersion,
-      objectDatumParameters.dataReference,
-      objectDatumParameters.eventCreationInfo,
-      objectDatumParameters.signers
+      objectDatumParameters.dataReferenceHex,
+      objectDatumParameters.eventCreationInfoTxHash,
+      objectDatumParameters.signersPkHash
     );
     this.objectContractSetup = true;
     return this;
+  }
+
+  public getObjectContractSetupStatus(): boolean {
+    return this.objectContractSetup;
   }
 
   public async getWalletUtxos(): Promise<UTxO[]> {
@@ -235,8 +241,8 @@ export class EventFactory {
 
     // We create a transaction builder to build our minting transaction.
     const txBuilder = new MeshTxBuilder({
-      fetcher: this.provider,
-      submitter: this.provider,
+      fetcher: this.fetcher,
+      submitter: this.submitter,
       verbose: true
     });
 
@@ -254,7 +260,7 @@ export class EventFactory {
         }
       ])
       .txOutInlineDatumValue(this.objectDatum, 'JSON')
-      .changeAddress(await this.getWalletAddress());
+      .changeAddress(this.wallet.getChangeAddress());
 
     // All inputs to the transaction will count as collateral utxos.
     utxos.forEach((u) =>
@@ -280,15 +286,15 @@ export class EventFactory {
 
   public static getObjectDatum(
     protocolVersion: bigint,
-    dataReference: string,
-    eventCreationInfo: string,
-    signers: string[]
+    dataReferenceHex: string,
+    eventCreationInfoTxHash: string,
+    signersPkHash: string[]
   ): PlutusData {
     return conStr0([
       integer(protocolVersion),
-      byteString(dataReference),
-      byteString(eventCreationInfo),
-      list(signers.map((key) => byteString(key)))
+      byteString(dataReferenceHex),
+      byteString(eventCreationInfoTxHash), // Note this does not check for the length of the transaction id hash from the blake2b_256 function (32 bytes).
+      list(signersPkHash.map((key) => pubKeyHash(key)))
     ]);
   }
 
