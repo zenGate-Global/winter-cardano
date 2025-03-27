@@ -1,4 +1,4 @@
-import { IFetcher, ISubmitter, MeshWallet, Network } from '@meshsdk/core';
+import { deserializeAddress, IFetcher, ISubmitter, MeshWallet, Network } from '@meshsdk/core';
 
 export function getWallet(
   network: Network,
@@ -25,4 +25,8 @@ export function networkToId(network: Network): 0 | 1 {
     default:
       return 0;
   }
+}
+
+export function getAddressPublicKeyHash(address: string): string {
+  return deserializeAddress(address).pubKeyHash;
 }

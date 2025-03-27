@@ -40,7 +40,7 @@ import { PLUTUSJSON } from './plutus';
 import { getEventDatum } from './read';
 import { fromHex, fromText, SeedWallet, toHex } from './wallet';
 import { FromSeed, walletFromSeed } from './wallet';
-import { getWallet, networkToId } from './utils/wallet';
+import { getAddressPublicKeyHash, getWallet, networkToId } from './utils/wallet';
 
 // export function networkToId(network: Network): number {
 //   const networkIds: Record<Network, number> = {
@@ -130,7 +130,7 @@ export class EventFactory {
     this.burnRedeemer = conStr0([]);
 
     // Apply parameters to the object event script.
-    // a. The first parameter is the payment credential.
+    // a. The first parameter is the payment credential of the Winter fee address.
     // b. The second parameter is the fee amount.
     const pubkeyHashBytes = deserializeAddress(this.feeAddress).pubKeyHash;
     const paymentCredential = pubKeyAddress(pubkeyHashBytes, undefined, false);
@@ -155,63 +155,6 @@ export class EventFactory {
       this.networkId,
       false
     ).address;
-  }
-
-  public async setObjectContract(objectDatumParameters: ObjectDatumParameters): Promise<this> {
-    this.objectDatum = EventFactory.getObjectDatum(
-      objectDatumParameters.protocolVersion,
-      objectDatumParameters.dataReferenceHex,
-      objectDatumParameters.eventCreationInfoTxHash,
-      objectDatumParameters.signersPkHash
-    );
-    this.objectContractSetup = true;
-    return this;
-  }
-
-  public getObjectContractSetupStatus(): boolean {
-    return this.objectContractSetup;
-  }
-
-  public async getWalletUtxos(): Promise<UTxO[]> {
-    const walletAddress = await this.getWalletAddress();
-    return this.getAddressUtxos(walletAddress);
-  }
-
-  public async getAddressUtxos(address: string): Promise<UTxO[]> {
-    return this.provider.fetchAddressUTxOs(address);
-  }
-
-  public async getWalletAddress(): Promise<string> {
-    return this.seedWallet.address();
-  }
-
-  public async getUtxosByOutRef(
-    outRefs: { txHash: string; outputIndex: number }[]
-  ): Promise<UTxO[]> {
-    const groupedOutRefs: { [txHash: string]: number[] } = {};
-    outRefs.forEach((ref) => {
-      if (groupedOutRefs[ref.txHash]) {
-        groupedOutRefs[ref.txHash].push(ref.outputIndex);
-      } else {
-        groupedOutRefs[ref.txHash] = [ref.outputIndex];
-      }
-    });
-
-    const promises = Object.entries(groupedOutRefs).map(async ([txHash, outputIndexes]) => {
-      const utxos = await this.provider.fetchUTxOs(txHash);
-      return utxos.filter((utxo) => outputIndexes.includes(utxo.input.outputIndex));
-    });
-
-    const utxos = await Promise.all(promises);
-    return utxos.flat();
-  }
-
-  public getAddressPK(address: string): string {
-    return serializeBech32Address(address).pubKeyHash;
-  }
-
-  public async waitForTx(txHash: string): Promise<boolean> {
-    return true;
   }
 
   public async mintSingleton(name: string, utxos: UTxO[]): Promise<string> {
@@ -282,20 +225,6 @@ export class EventFactory {
     // txBuilder.reset();
     // Transaction
     // return this.toTranslucentTransaction(signedTx);
-  }
-
-  public static getObjectDatum(
-    protocolVersion: bigint,
-    dataReferenceHex: string,
-    eventCreationInfoTxHash: string,
-    signersPkHash: string[]
-  ): PlutusData {
-    return conStr0([
-      integer(protocolVersion),
-      byteString(dataReferenceHex),
-      byteString(eventCreationInfoTxHash), // Note this does not check for the length of the transaction id hash from the blake2b_256 function (32 bytes).
-      list(signersPkHash.map((key) => pubKeyHash(key)))
-    ]);
   }
 
   public async recreate(
@@ -442,20 +371,90 @@ export class EventFactory {
     return this.toTranslucentTransaction(signedTx);
   }
 
+  public static getObjectDatum(
+    protocolVersion: bigint,
+    dataReferenceHex: string,
+    eventCreationInfoTxHash: string,
+    signersPkHash: string[]
+  ): PlutusData {
+    return conStr0([
+      integer(protocolVersion),
+      byteString(dataReferenceHex),
+      byteString(eventCreationInfoTxHash), // Note this does not check for the length of the transaction id hash from the blake2b_256 function (32 bytes).
+      list(signersPkHash.map((key) => pubKeyHash(key)))
+    ]);
+  }
+
+  public setObjectContract(objectDatumParameters: ObjectDatumParameters): this {
+    this.objectDatum = EventFactory.getObjectDatum(
+      objectDatumParameters.protocolVersion,
+      objectDatumParameters.dataReferenceHex,
+      objectDatumParameters.eventCreationInfoTxHash,
+      objectDatumParameters.signersPkHash
+    );
+    this.objectContractSetup = true;
+    return this;
+  }
+
+  public getObjectContractSetupStatus(): boolean {
+    return this.objectContractSetup;
+  }
+
+  public async getWalletUtxos(): Promise<UTxO[]> {
+    return await this.wallet.getUtxos();
+  }
+
+  public getWalletAddress(): string {
+    return this.wallet.getChangeAddress();
+  }
+
+  public getAddressPkHash(): string {
+    return getAddressPublicKeyHash(this.wallet.getChangeAddress());
+  }
+
+  public async getUtxosByOutRef(
+    outRefs: { txHash: string; outputIndex: number }[]
+  ): Promise<UTxO[]> {
+    const groupedOutRefs: { [txHash: string]: number[] } = {};
+    outRefs.forEach((ref) => {
+      if (groupedOutRefs[ref.txHash]) {
+        groupedOutRefs[ref.txHash].push(ref.outputIndex);
+      } else {
+        groupedOutRefs[ref.txHash] = [ref.outputIndex];
+      }
+    });
+
+    const promises = Object.entries(groupedOutRefs).map(async ([txHash, outputIndexes]) => {
+      const utxos = await this.fetcher.fetchUTxOs(txHash);
+      return utxos.filter((utxo) => outputIndexes.includes(utxo.input.outputIndex));
+    });
+
+    const utxos = await Promise.all(promises);
+    return utxos.flat();
+  }
+
+  public async waitForTx(txHash: string): Promise<boolean> {
+    return true;
+  }
+
   private toTranslucentTransaction(txHex: string): C.Transaction {
     return C.Transaction.from_bytes(fromHex(txHex));
   }
 
-  public async signTx(tx: C.Transaction): Promise<string> {
-    const witnessSet = await this.seedWallet.signTx(tx);
-    const witnessSetBuilder = C.TransactionWitnessSetBuilder.new();
-    witnessSetBuilder.add_existing(witnessSet);
-    witnessSetBuilder.add_existing(tx.witness_set());
-    const signedTx = C.Transaction.new(tx.body(), witnessSetBuilder.build(), tx.auxiliary_data());
-    return toHex(signedTx.to_bytes());
+  // public async signTx(tx: C.Transaction): Promise<string> {
+  //   const witnessSet = await this.seedWallet.signTx(tx);
+  //   const witnessSetBuilder = C.TransactionWitnessSetBuilder.new();
+  //   witnessSetBuilder.add_existing(witnessSet);
+  //   witnessSetBuilder.add_existing(tx.witness_set());
+  //   const signedTx = C.Transaction.new(tx.body(), witnessSetBuilder.build(), tx.auxiliary_data());
+  //   return toHex(signedTx.to_bytes());
+  // }
+
+  public async signTx(unsignedTx: string): Promise<string> {
+    return await this.wallet.signTx(unsignedTx);
   }
 
   public async submitTx(tx: string): Promise<string> {
-    return this.provider.submitTx(tx);
+    return await this.wallet.submitTx(tx);
   }
 }
