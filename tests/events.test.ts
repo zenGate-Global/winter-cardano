@@ -21,9 +21,9 @@ const walletAddressPK = winterEvent.getAddressPK(walletAddress);
 
 await winterEvent.setObjectContract({
   protocolVersion: 1n,
-  dataReference: fromText('harvest'),
-  eventCreationInfo: fromText(''),
-  signers: [walletAddressPK]
+  dataReferenceHex: fromText('harvest'),
+  eventCreationInfoHex: fromText(''),
+  signersPkHash: [walletAddressPK]
 });
 
 const sharedUtxos: UTxO[] = [];

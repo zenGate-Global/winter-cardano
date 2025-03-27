@@ -1,10 +1,10 @@
-import { IFetcher, ISubmitter, MaestroProvider, MeshWallet, Network } from '@meshsdk/core';
+import { deserializeAddress, IFetcher, ISubmitter, MeshWallet, Network } from '@meshsdk/core';
 
 export function getWallet(
   network: Network,
+  mnemonic: string | string[],
   fetcher: IFetcher,
-  submitter: ISubmitter,
-  mnemonic: string
+  submitter: ISubmitter
 ): MeshWallet {
   const networkId = networkToId(network);
   return new MeshWallet({
@@ -13,7 +13,7 @@ export function getWallet(
     submitter,
     key: {
       type: 'mnemonic',
-      words: mnemonic.split(' ')
+      words: typeof mnemonic === 'string' ? mnemonic.split(' ') : mnemonic
     }
   });
 }
@@ -25,4 +25,8 @@ export function networkToId(network: Network): 0 | 1 {
     default:
       return 0;
   }
+}
+
+export function getAddressPublicKeyHash(address: string): string {
+  return deserializeAddress(address).pubKeyHash;
 }
