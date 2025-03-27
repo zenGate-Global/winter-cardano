@@ -3,6 +3,7 @@ import {
   byteString,
   conStr0,
   deserializeAddress,
+  deserializeDatum,
   hashByteString,
   IEvaluator,
   IFetcher,
@@ -18,7 +19,9 @@ import {
   PlutusScript,
   pubKeyAddress,
   pubKeyHash,
+  resolvePlutusScriptHash,
   resolveScriptHash,
+  scriptHash,
   serializePlutusScript,
   stringToHex,
   tokenName,
@@ -132,8 +135,12 @@ export class EventFactory {
     // Apply parameters to the object event script.
     // a. The first parameter is the payment credential of the Winter fee address.
     // b. The second parameter is the fee amount.
-    const pubkeyHashBytes = deserializeAddress(this.feeAddress).pubKeyHash;
-    const paymentCredential = pubKeyAddress(pubkeyHashBytes, undefined, false);
+    const deserializedAddr = deserializeAddress(this.feeAddress);
+    const paymentCredential = pubKeyAddress(
+      deserializedAddr.pubKeyHash,
+      deserializedAddr.stakeCredentialHash,
+      false
+    );
     const feeAmount = integer(this.feeAmount);
     const objectEventContractWithParamsScriptBytes = applyParamsToScript(
       this.validators.objectEvent.code,
@@ -151,7 +158,7 @@ export class EventFactory {
     // which is the Bech32 encoding of the PlutusScript bytes.
     this.objectEventContractAddress = serializePlutusScript(
       this.objectEventContract,
-      undefined,
+      deserializedAddr.stakeCredentialHash,
       this.networkId,
       false
     ).address;
@@ -303,32 +310,34 @@ export class EventFactory {
     walletUtxos: UTxO[],
     utxos: UTxO[],
     KOIOS_URL?: string,
-    singletonContracts?: ContractType
-  ): Promise<C.Transaction> {
+    singletonContracts?: PlutusScript
+  ): Promise<string> {
     if (!KOIOS_URL && !singletonContracts)
       throw new Error('either KOIOS_URL or singletonContracts must be provided');
 
     const cardanoKoiosClient = KOIOS_URL ? new Koios(KOIOS_URL) : undefined;
 
+    // We create a transaction builder to build our spend transaction.
     const txBuilder = new MeshTxBuilder({
-      fetcher: this.provider,
-      submitter: this.provider,
-      evaluator: this.provider
+      fetcher: this.fetcher,
+      submitter: this.submitter,
+      verbose: true
     });
 
-    const tx = txBuilder
+    txBuilder
       .selectUtxosFrom(walletUtxos)
-      .requiredSignerHash(serializeBech32Address(signerAddress).pubKeyHash);
+      .requiredSignerHash(getAddressPublicKeyHash(signerAddress));
 
     for (let index = 0; index < utxos.length; index++) {
-      // just checks for valid datum structure, doesnt actually use the value
+      // This just checks for valid datum structure, it does not actually use the value.
       try {
         if (!utxos[index].output.plutusData) {
-          throw new Error();
+          throw new Error('No Plutus data in utxo.');
         }
-        getEventDatum(utxos[index].output.plutusData!);
+        deserializeDatum<ObjectDatum>(utxos[index].output.plutusData!);
+        //getEventDatum(utxos[index].output.plutusData!);
       } catch (e) {
-        throw new Error('issue with datum');
+        throw new Error('Issue building ObjectDatum from CBOR string.');
       }
 
       const tokenId = utxos[index].output.amount.filter((k) => k.unit !== 'lovelace')[0].unit;
@@ -337,38 +346,44 @@ export class EventFactory {
 
       const scriptBytes = cardanoKoiosClient
         ? (await cardanoKoiosClient.scriptInfo([policyId]))[0].bytes
-        : singletonContracts!.script;
+        : singletonContracts!.code;
 
       const mintingScript = {
-        type: 'V2',
-        script: applyParamsToScript(scriptBytes, [])
+        version: 'V2',
+        code: applyParamsToScript(scriptBytes, []) // What does this do?
       };
 
-      tx.spendingPlutusScriptV2()
+      txBuilder
+        .spendingPlutusScriptV2()
         .txIn(utxos[index].input.txHash, utxos[index].input.outputIndex) // validator input which contains token
         .txInInlineDatumPresent()
-        .txInRedeemerValue(mConStr1([]))
-        .txInScript(this.objectEventContract.script)
+        .txInRedeemerValue(this.spendRedeemer)
+        .txInScript(this.objectEventContract.code)
         .mintPlutusScriptV2()
         .mint('-1', policyId, tokenName)
-        .mintingScript(mintingScript.script)
-        .mintRedeemerValue(mConStr1([]))
+        .mintingScript(mintingScript.code)
+        .mintRedeemerValue(this.mintRedeemer)
         .txOut(recipientAddress, []);
     }
 
     walletUtxos.forEach((u) =>
-      tx.txInCollateral(u.input.txHash, u.input.outputIndex, u.output.amount, u.output.address)
+      txBuilder.txInCollateral(
+        u.input.txHash,
+        u.input.outputIndex,
+        u.output.amount,
+        u.output.address
+      )
     );
 
-    await tx
+    txBuilder
       .txOut(this.feeAddress, [{ unit: 'lovelace', quantity: this.feeAmount.toString() }])
-      .changeAddress(await this.getWalletAddress())
-      .complete();
+      .changeAddress(this.wallet.getChangeAddress());
 
-    const signedTx = tx.completeSigning();
+    const unsignedTxHex = await txBuilder.complete();
+
     txBuilder.reset();
 
-    return this.toTranslucentTransaction(signedTx);
+    return unsignedTxHex;
   }
 
   public static getObjectDatum(
