@@ -1,7 +1,7 @@
 import { PlutusScript } from '@meshsdk/core';
 
 export interface ObjectDatumParameters {
-  protocolVersion: bigint;
+  protocolVersion: number;
   dataReferenceHex: string;
   eventCreationInfoTxHash: string;
   signersPkHash: Array<string>;
