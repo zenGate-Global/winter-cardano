@@ -4,10 +4,7 @@ import {
   conStr0,
   deserializeAddress,
   deserializeDatum,
-  hashByteString,
-  IEvaluator,
   IFetcher,
-  IListener,
   integer,
   ISubmitter,
   list,
@@ -230,7 +227,7 @@ export class EventFactory {
         throw new Error('data references cannot be the same');
       }
 
-      const newObjectDatum = EventFactory.getObjectDatum(
+      const newObjectDatum = EventFactory.getObjectDatumFromParams(
         objectDatum!.protocol_version.int as number,
         newDataReferences[index],
         objectDatum!.event_creation_info_tx_hash.bytes === ''
@@ -357,7 +354,7 @@ export class EventFactory {
     return unsignedTxHex;
   }
 
-  public static getObjectDatum(
+  public static getObjectDatumFromParams(
     protocolVersion: number,
     dataReferenceHex: string,
     eventCreationInfoTxHash: string,
@@ -371,8 +368,12 @@ export class EventFactory {
     ]);
   }
 
+  public static getObjectDatumFromPlutusData(plutusData: string): ObjectDatum {
+    return deserializeDatum<ObjectDatum>(plutusData);
+  }
+
   public setObjectContract(objectDatumParameters: ObjectDatumParameters): this {
-    this.objectDatum = EventFactory.getObjectDatum(
+    this.objectDatum = EventFactory.getObjectDatumFromParams(
       objectDatumParameters.protocolVersion,
       objectDatumParameters.dataReferenceHex,
       objectDatumParameters.eventCreationInfoTxHash,
