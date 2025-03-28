@@ -4,6 +4,7 @@ import {
   conStr0,
   deserializeAddress,
   deserializeDatum,
+  IEvaluator,
   IFetcher,
   integer,
   ISubmitter,
@@ -55,6 +56,7 @@ export class EventFactory {
   public readonly wallet: MeshWallet;
   public readonly fetcher: IFetcher;
   public readonly submitter: ISubmitter;
+  public readonly evaluator?: IEvaluator;
   public readonly network: Network;
   public readonly networkId: number;
 
@@ -62,7 +64,8 @@ export class EventFactory {
     network: string,
     mnemonic: string | string[],
     fetcher: IFetcher,
-    submitter: ISubmitter
+    submitter: ISubmitter,
+    evaluator?: IEvaluator
   ) {
     // Validate inputs
     this.validateInputs(network);
@@ -71,6 +74,7 @@ export class EventFactory {
     this.wallet = getWallet(this.network, mnemonic, fetcher, submitter);
     this.fetcher = fetcher;
     this.submitter = submitter;
+    this.evaluator = evaluator;
     this.networkId = networkToId(this.network);
 
     // Store Winter protocol fees.
@@ -158,6 +162,7 @@ export class EventFactory {
     const txBuilder = new MeshTxBuilder({
       fetcher: this.fetcher,
       submitter: this.submitter,
+      evaluator: this.evaluator,
       verbose: true
     });
 
@@ -190,6 +195,7 @@ export class EventFactory {
     // Complete the transaction building and obtain the unsigned transaction.
     const unsignedTxHex = await txBuilder.complete();
     txBuilder.reset();
+
     return unsignedTxHex;
 
     // // Sign the transaction with the wallet associated with the EventFactory.
