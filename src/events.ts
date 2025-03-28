@@ -19,31 +19,16 @@ import {
   PlutusScript,
   pubKeyAddress,
   pubKeyHash,
-  resolvePlutusScriptHash,
   resolveScriptHash,
-  scriptHash,
   serializePlutusScript,
   stringToHex,
   tokenName,
   UTxO
 } from '@meshsdk/core';
-import { C } from './core';
-import { Data as TData } from './data';
 import { WINTER_FEE, WINTER_FEE_ADDRESS_MAINNET, WINTER_FEE_ADDRESS_TESTNET } from './fee';
 import { Koios } from './koios';
-import type {
-  BuilderData,
-  ContractType,
-  ObjectDatum,
-  ObjectDatumParameters,
-  PlutusJson,
-  Seed,
-  Validators
-} from './models';
+import type { ObjectDatum, ObjectDatumParameters, PlutusJson, Validators } from './models';
 import { PLUTUSJSON } from './plutus';
-import { getEventDatum } from './read';
-import { fromHex, fromText, SeedWallet, toHex } from './wallet';
-import { FromSeed, walletFromSeed } from './wallet';
 import { getAddressPublicKeyHash, getWallet, networkToId } from './utils/wallet';
 
 export class EventFactory {
@@ -438,9 +423,9 @@ export class EventFactory {
     return true;
   }
 
-  private toTranslucentTransaction(txHex: string): C.Transaction {
-    return C.Transaction.from_bytes(fromHex(txHex));
-  }
+  // private toTranslucentTransaction(txHex: string): C.Transaction {
+  //   return C.Transaction.from_bytes(fromHex(txHex));
+  // }
 
   // public async signTx(tx: C.Transaction): Promise<string> {
   //   const witnessSet = await this.seedWallet.signTx(tx);
