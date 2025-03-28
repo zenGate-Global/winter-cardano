@@ -21,6 +21,7 @@ import {
   serializePlutusScript,
   stringToHex,
   tokenName,
+  txOutRef,
   UTxO
 } from '@meshsdk/core';
 import { WINTER_FEE, WINTER_FEE_ADDRESS_MAINNET, WINTER_FEE_ADDRESS_TESTNET } from './fee';
@@ -142,7 +143,8 @@ export class EventFactory {
     // b. The second parameter is the output reference used for the one-shot minting policy.
     const hexName = stringToHex(name);
     const tName = tokenName(hexName);
-    const outputRef = outputReference(utxos[0].input.txHash, utxos[0].input.outputIndex);
+    //const outputRef = outputReference(utxos[0].input.txHash, utxos[0].input.outputIndex);
+    const outputRef = txOutRef(utxos[0].input.txHash, utxos[0].input.outputIndex);
     const singletonContractWithParamsScriptBytes = applyParamsToScript(
       this.validators.singleton.code,
       [tName, outputRef],
