@@ -26,7 +26,7 @@ import { WINTER_FEE, WINTER_FEE_ADDRESS_MAINNET, WINTER_FEE_ADDRESS_TESTNET } fr
 import { Koios } from './koios';
 import type { ObjectDatum, ObjectDatumParameters, PlutusJson, Validators } from './models';
 import { PLUTUSJSON } from './plutus';
-import { getAddressPublicKeyHash, getWallet, networkToId } from './utils/wallet';
+import { getAddressPublicKeyHash, getWallet, isValidNetwork, networkToId } from './utils/wallet';
 
 export class EventFactory {
   // Winter protocol fee information.
@@ -59,17 +59,20 @@ export class EventFactory {
   public readonly networkId: number;
 
   constructor(
-    network: Network,
+    network: string,
     mnemonic: string | string[],
     fetcher: IFetcher,
     submitter: ISubmitter
   ) {
+    // Validate inputs
+    this.validateInputs(network);
+
     // Store wallet information.
-    this.wallet = getWallet(network, mnemonic, fetcher, submitter);
+    this.wallet = getWallet(network as Network, mnemonic, fetcher, submitter);
     this.fetcher = fetcher;
     this.submitter = submitter;
-    this.network = network;
-    this.networkId = networkToId(network);
+    this.network = network as Network;
+    this.networkId = networkToId(network as Network);
 
     // Store Winter protocol fees.
     this.feeAddress =
@@ -443,5 +446,11 @@ export class EventFactory {
 
   public async submitTx(tx: string): Promise<string> {
     return await this.wallet.submitTx(tx);
+  }
+
+  private validateInputs(network: string): void {
+    if (!isValidNetwork(network)) {
+      throw new Error('EventFactory Error: Cannot create instance, invalid network.');
+    }
   }
 }
