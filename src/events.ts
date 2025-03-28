@@ -66,13 +66,12 @@ export class EventFactory {
   ) {
     // Validate inputs
     this.validateInputs(network);
-
+    this.network = network.toLowerCase() as Network;
     // Store wallet information.
-    this.wallet = getWallet(network as Network, mnemonic, fetcher, submitter);
+    this.wallet = getWallet(this.network, mnemonic, fetcher, submitter);
     this.fetcher = fetcher;
     this.submitter = submitter;
-    this.network = network as Network;
-    this.networkId = networkToId(network as Network);
+    this.networkId = networkToId(this.network);
 
     // Store Winter protocol fees.
     this.feeAddress =
