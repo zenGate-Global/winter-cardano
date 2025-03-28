@@ -20,7 +20,7 @@ export function getWallet(
 
 export function isValidNetwork(network: string): network is Network {
   const validNetworks: Network[] = ['mainnet', 'testnet', 'preview', 'preprod'];
-  return validNetworks.includes(network as Network);
+  return validNetworks.includes(network.toLowerCase() as Network);
 }
 
 export function networkToId(network: Network): 0 | 1 {
