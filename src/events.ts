@@ -1,4 +1,5 @@
 import {
+  applyCborEncoding,
   applyParamsToScript,
   Asset,
   byteString,
@@ -232,25 +233,28 @@ export class EventFactory {
         if (!utxo.output.plutusData) {
           throw new Error('No Plutus data in event utxo.');
         }
-        objectDatum = deserializeDatum<ObjectDatumFields>(utxo.output.plutusData);
+        objectDatum = EventFactory.getObjectDatumFieldsFromPlutusCbor(utxo.output.plutusData);
       } catch (e) {
         throw new Error('Issue building ObjectDatum from CBOR string.');
       }
+      console.log('test_recreate_datum: ', objectDatum);
 
-      if (objectDatum!.data_reference_hex.bytes === newDataReferences[index]) {
+      if (objectDatum.data_reference_hex.bytes === newDataReferences[index]) {
         throw new Error('Data references cannot be the same.');
       }
 
       // Construct the new object datum.
       // All paremeters are recreated other than the data reference.
-      const newObjectDatum = EventFactory.getObjectDatumFromParams(
-        objectDatum!.protocol_version.int as number,
-        newDataReferences[index],
-        objectDatum!.event_creation_info_tx_hash.bytes === ''
-          ? utxo.input.txHash
-          : objectDatum!.event_creation_info_tx_hash.bytes,
-        objectDatum!.signers_pk_hash.list.map((pkh) => pkh.bytes)
-      );
+      const params: ObjectDatumParameters = {
+        protocolVersion: objectDatum!.protocol_version.int as number,
+        dataReferenceHex: newDataReferences[index],
+        eventCreationInfoTxHash:
+          objectDatum!.event_creation_info_tx_hash.bytes === ''
+            ? utxo.input.txHash
+            : objectDatum!.event_creation_info_tx_hash.bytes,
+        signersPkHash: objectDatum!.signers_pk_hash.list.map((pkh) => pkh.bytes)
+      };
+      const newObjectDatum = EventFactory.getObjectDatumFromParams(params);
 
       // Make sure the event token is transferred to the new utxo.
       const outAmount: Asset[] = [
@@ -299,9 +303,9 @@ export class EventFactory {
     walletUtxos: UTxO[],
     events: UTxO[],
     KOIOS_URL?: string,
-    singletonContract?: PlutusScript
+    singletonContracts?: PlutusScript[]
   ): Promise<string> {
-    if (!KOIOS_URL && !singletonContract)
+    if (!KOIOS_URL && !singletonContracts)
       throw new Error('Either KOIOS_URL or singletonContracts must be provided.');
 
     const cardanoKoiosClient = KOIOS_URL ? new Koios(KOIOS_URL) : undefined;
@@ -323,7 +327,7 @@ export class EventFactory {
         if (!events[index].output.plutusData) {
           throw new Error('No Plutus datum in utxo.');
         }
-        deserializeDatum<ObjectDatumFields>(events[index].output.plutusData!);
+        deserializeDatum<ObjectDatum>(events[index].output.plutusData!);
       } catch (e) {
         throw new Error('Issue building ObjectDatum from CBOR string.');
       }
@@ -337,11 +341,12 @@ export class EventFactory {
       // can burn the token.
       const scriptBytes = cardanoKoiosClient
         ? (await cardanoKoiosClient.scriptInfo([policyId]))[0].bytes
-        : singletonContract!.code;
+        : singletonContracts?.at(index)?.code;
 
+      // Script requires double CBOR encoding.
       const mintingScript: PlutusScript = {
         version: 'V2',
-        code: applyParamsToScript(scriptBytes, []) // What does this do?
+        code: applyCborEncoding(scriptBytes as string)
       };
 
       txBuilder
@@ -353,7 +358,7 @@ export class EventFactory {
         .mintPlutusScriptV2()
         .mint('-1', policyId, tokenName)
         .mintingScript(mintingScript.code)
-        .mintRedeemerValue(this.mintRedeemer)
+        .mintRedeemerValue(this.mintRedeemer, 'JSON')
         .txOut(recipientAddress, []);
     }
 
@@ -379,31 +384,31 @@ export class EventFactory {
     return unsignedTxHex;
   }
 
-  public static getObjectDatumFromParams(
-    protocolVersion: number,
-    dataReferenceHex: string,
-    eventCreationInfoTxHash: string,
-    signersPkHash: string[]
-  ): ObjectDatum {
+  public static getObjectDatumFromParams(params: ObjectDatumParameters): ObjectDatum {
     return conStr0([
-      integer(protocolVersion),
-      byteString(dataReferenceHex),
-      byteString(eventCreationInfoTxHash), // Note this does not check for the length of the transaction id hash from the blake2b_256 function (32 bytes).
-      list(signersPkHash.map((key) => pubKeyHash(key)))
+      integer(params.protocolVersion),
+      byteString(params.dataReferenceHex),
+      byteString(params.eventCreationInfoTxHash), // Note this does not check for the length of the transaction id hash from the blake2b_256 function (32 bytes).
+      list(params.signersPkHash.map((key) => pubKeyHash(key)))
     ]);
   }
 
-  public static getObjectDatumFieldsFromPlutusData(plutusData: string): ObjectDatumFields {
-    return deserializeDatum<ObjectDatumFields>(plutusData);
+  public static getObjectDatumFieldsFromObjectDatum(datum: ObjectDatum): ObjectDatumFields {
+    return {
+      protocol_version: datum.fields[0],
+      data_reference_hex: datum.fields[1],
+      event_creation_info_tx_hash: datum.fields[2],
+      signers_pk_hash: datum.fields[3]
+    };
+  }
+
+  public static getObjectDatumFieldsFromPlutusCbor(plutusCbor: string): ObjectDatumFields {
+    const datum = deserializeDatum<ObjectDatum>(plutusCbor);
+    return EventFactory.getObjectDatumFieldsFromObjectDatum(datum);
   }
 
   public setObjectContract(objectDatumParameters: ObjectDatumParameters): this {
-    this.objectDatum = EventFactory.getObjectDatumFromParams(
-      objectDatumParameters.protocolVersion,
-      objectDatumParameters.dataReferenceHex,
-      objectDatumParameters.eventCreationInfoTxHash,
-      objectDatumParameters.signersPkHash
-    );
+    this.objectDatum = EventFactory.getObjectDatumFromParams(objectDatumParameters);
     this.objectContractSetup = true;
     return this;
   }
@@ -445,7 +450,7 @@ export class EventFactory {
     return utxos.flat();
   }
 
-  public async waitForTx(txHash: string): Promise<boolean> {
+  static async waitForTx(txHash: string): Promise<boolean> {
     return true;
   }
 
