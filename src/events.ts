@@ -379,31 +379,21 @@ export class EventFactory {
     return unsignedTxHex;
   }
 
-  public static getObjectDatumFromParams(
-    protocolVersion: number,
-    dataReferenceHex: string,
-    eventCreationInfoTxHash: string,
-    signersPkHash: string[]
-  ): ObjectDatum {
+  public static getObjectDatumFromParams(params: ObjectDatumParameters): ObjectDatum {
     return conStr0([
-      integer(protocolVersion),
-      byteString(dataReferenceHex),
-      byteString(eventCreationInfoTxHash), // Note this does not check for the length of the transaction id hash from the blake2b_256 function (32 bytes).
-      list(signersPkHash.map((key) => pubKeyHash(key)))
+      integer(params.protocolVersion),
+      byteString(params.dataReferenceHex),
+      byteString(params.eventCreationInfoTxHash), // Note this does not check for the length of the transaction id hash from the blake2b_256 function (32 bytes).
+      list(params.signersPkHash.map((key) => pubKeyHash(key)))
     ]);
   }
 
-  public static getObjectDatumFieldsFromPlutusData(plutusData: string): ObjectDatumFields {
-    return deserializeDatum<ObjectDatumFields>(plutusData);
+  public static getObjectDatumFieldsFromPlutusCbor(plutusCbor: string): ObjectDatumFields {
+    return deserializeDatum<ObjectDatumFields>(plutusCbor);
   }
 
   public setObjectContract(objectDatumParameters: ObjectDatumParameters): this {
-    this.objectDatum = EventFactory.getObjectDatumFromParams(
-      objectDatumParameters.protocolVersion,
-      objectDatumParameters.dataReferenceHex,
-      objectDatumParameters.eventCreationInfoTxHash,
-      objectDatumParameters.signersPkHash
-    );
+    this.objectDatum = EventFactory.getObjectDatumFromParams(objectDatumParameters);
     this.objectContractSetup = true;
     return this;
   }
