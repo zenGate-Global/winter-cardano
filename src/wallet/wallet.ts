@@ -1,5 +1,5 @@
 import { mnemonicToEntropy } from 'bip39';
-import { KeyHash, Network, UTxO } from '../models';
+import { KeyHash, Network, UTxO } from '../types';
 import { fromHex, getAddressDetails, toHex } from './utils';
 import { C } from '../core';
 

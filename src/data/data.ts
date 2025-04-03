@@ -7,7 +7,7 @@ import {
   TSchema,
   Type
 } from '@sinclair/typebox';
-import { Datum, Exact, Json, Redeemer } from '../models';
+import { Datum, Exact, Json, Redeemer } from '../types';
 import { fromHex, fromText, toHex } from '../wallet';
 import { C } from '../core';
 

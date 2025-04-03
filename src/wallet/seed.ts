@@ -1,6 +1,6 @@
 import { IFetcher, ISubmitter, UTxO as MeshUTxO } from '@meshsdk/core';
 import { C } from '../core';
-import { Delegation, KeyHash, Network, UTxO as TransUtxo } from '../models';
+import { Delegation, KeyHash, Network, UTxO as TransUtxo } from '../types';
 import { meshUtxoToTransUtxo, utxoToCore } from './utils';
 import { discoverOwnUsedTxKeyHashes, walletFromSeed } from './wallet';
 

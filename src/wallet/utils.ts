@@ -1,6 +1,6 @@
 import { UTxO } from '@meshsdk/core';
 import { C } from '../core';
-import { AddressDetails, Assets, Credential, Script, UTxO as TransUtxo } from '../models';
+import { AddressDetails, Assets, Credential, Script, UTxO as TransUtxo } from '../types';
 export const meshUtxoToTransUtxo = (utxo: UTxO): TransUtxo => {
   return {
     txHash: utxo.input.txHash,
