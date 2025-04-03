@@ -232,12 +232,13 @@ export class EventFactory {
         if (!utxo.output.plutusData) {
           throw new Error('No Plutus data in event utxo.');
         }
-        objectDatum = deserializeDatum<ObjectDatumFields>(utxo.output.plutusData);
+        objectDatum = EventFactory.getObjectDatumFieldsFromPlutusCbor(utxo.output.plutusData);
       } catch (e) {
         throw new Error('Issue building ObjectDatum from CBOR string.');
       }
+      console.log('test_recreate_datum: ', objectDatum);
 
-      if (objectDatum!.data_reference_hex.bytes === newDataReferences[index]) {
+      if (objectDatum.data_reference_hex.bytes === newDataReferences[index]) {
         throw new Error('Data references cannot be the same.');
       }
 
@@ -325,7 +326,7 @@ export class EventFactory {
         if (!events[index].output.plutusData) {
           throw new Error('No Plutus datum in utxo.');
         }
-        deserializeDatum<ObjectDatumFields>(events[index].output.plutusData!);
+        deserializeDatum<ObjectDatum>(events[index].output.plutusData!);
       } catch (e) {
         throw new Error('Issue building ObjectDatum from CBOR string.');
       }
@@ -390,8 +391,18 @@ export class EventFactory {
     ]);
   }
 
+  public static getObjectDatumFieldsFromObjectDatum(datum: ObjectDatum): ObjectDatumFields {
+    return {
+      protocol_version: datum.fields[0],
+      data_reference_hex: datum.fields[1],
+      event_creation_info_tx_hash: datum.fields[2],
+      signers_pk_hash: datum.fields[3]
+    };
+  }
+
   public static getObjectDatumFieldsFromPlutusCbor(plutusCbor: string): ObjectDatumFields {
-    return deserializeDatum<ObjectDatumFields>(plutusCbor);
+    const datum = deserializeDatum<ObjectDatum>(plutusCbor);
+    return EventFactory.getObjectDatumFieldsFromObjectDatum(datum);
   }
 
   public setObjectContract(objectDatumParameters: ObjectDatumParameters): this {
@@ -437,7 +448,7 @@ export class EventFactory {
     return utxos.flat();
   }
 
-  public async waitForTx(txHash: string): Promise<boolean> {
+  static async waitForTx(txHash: string): Promise<boolean> {
     return true;
   }
 
