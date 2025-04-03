@@ -243,14 +243,16 @@ export class EventFactory {
 
       // Construct the new object datum.
       // All paremeters are recreated other than the data reference.
-      const newObjectDatum = EventFactory.getObjectDatumFromParams(
-        objectDatum!.protocol_version.int as number,
-        newDataReferences[index],
-        objectDatum!.event_creation_info_tx_hash.bytes === ''
-          ? utxo.input.txHash
-          : objectDatum!.event_creation_info_tx_hash.bytes,
-        objectDatum!.signers_pk_hash.list.map((pkh) => pkh.bytes)
-      );
+      const params: ObjectDatumParameters = {
+        protocolVersion: objectDatum!.protocol_version.int as number,
+        dataReferenceHex: newDataReferences[index],
+        eventCreationInfoTxHash:
+          objectDatum!.event_creation_info_tx_hash.bytes === ''
+            ? utxo.input.txHash
+            : objectDatum!.event_creation_info_tx_hash.bytes,
+        signersPkHash: objectDatum!.signers_pk_hash.list.map((pkh) => pkh.bytes)
+      };
+      const newObjectDatum = EventFactory.getObjectDatumFromParams(params);
 
       // Make sure the event token is transferred to the new utxo.
       const outAmount: Asset[] = [
