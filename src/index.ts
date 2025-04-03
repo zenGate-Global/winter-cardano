@@ -1,5 +1,5 @@
 export * from './koios';
-export * from './models';
+export * from './types';
 export * from './events';
 export * from './fee';
 export * from './plutus';

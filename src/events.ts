@@ -1,5 +1,6 @@
 import {
   applyParamsToScript,
+  Asset,
   byteString,
   conStr0,
   deserializeAddress,
@@ -12,7 +13,6 @@ import {
   MeshTxBuilder,
   MeshWallet,
   Network,
-  outputReference,
   PlutusData,
   PlutusScript,
   pubKeyAddress,
@@ -26,7 +26,13 @@ import {
 } from '@meshsdk/core';
 import { WINTER_FEE, WINTER_FEE_ADDRESS_MAINNET, WINTER_FEE_ADDRESS_TESTNET } from './fee';
 import { Koios } from './koios';
-import type { ObjectDatum, ObjectDatumParameters, PlutusJson, Validators } from './models';
+import type {
+  ObjectDatum,
+  ObjectDatumFields,
+  ObjectDatumParameters,
+  PlutusJson,
+  EventFactoryValidators
+} from './types';
 import { PLUTUSJSON } from './plutus';
 import { getAddressPublicKeyHash, getWallet, isValidNetwork, networkToId } from './utils/wallet';
 
@@ -37,14 +43,14 @@ export class EventFactory {
 
   // Winter protocol raw Plutus scripts.
   public readonly plutusJson: PlutusJson;
-  public readonly validators: Validators;
+  public readonly validators: EventFactoryValidators;
 
   // Winter protocol contracts with applied parameters,
   // specific to this instance of the EventFactory.
   public singletonContract: PlutusScript;
   public objectEventContract: PlutusScript;
   public objectEventContractAddress: string;
-  public objectDatum: PlutusData;
+  public objectDatum: ObjectDatum;
 
   public readonly recreateRedeemer: PlutusData;
   public readonly spendRedeemer: PlutusData;
@@ -210,7 +216,7 @@ export class EventFactory {
   public async recreate(
     signerAddress: string,
     walletUtxos: UTxO[],
-    utxos: UTxO[],
+    events: UTxO[],
     newDataReferences: string[]
   ): Promise<string> {
     // We create a transaction builder to build our recreate transaction.
@@ -222,21 +228,27 @@ export class EventFactory {
 
     txBuilder.selectUtxosFrom(walletUtxos);
 
-    utxos.forEach((utxo, index) => {
-      let objectDatum: ObjectDatum;
+    // 1. Check that the event utxos have an object datum
+    //    and that the data reference is different.
+    // 2. Recreate ObjectDatum.
+    // 3. Add recreated event to transaction.
+    events.forEach((utxo, index) => {
+      let objectDatum: ObjectDatumFields;
       try {
         if (!utxo.output.plutusData) {
-          throw new Error('No Plutus data in utxo.');
+          throw new Error('No Plutus data in event utxo.');
         }
-        objectDatum = deserializeDatum<ObjectDatum>(utxo.output.plutusData);
+        objectDatum = deserializeDatum<ObjectDatumFields>(utxo.output.plutusData);
       } catch (e) {
         throw new Error('Issue building ObjectDatum from CBOR string.');
       }
 
       if (objectDatum!.data_reference_hex.bytes === newDataReferences[index]) {
-        throw new Error('data references cannot be the same');
+        throw new Error('Data references cannot be the same.');
       }
 
+      // Construct the new object datum.
+      // All paremeters are recreated other than the data reference.
       const newObjectDatum = EventFactory.getObjectDatumFromParams(
         objectDatum!.protocol_version.int as number,
         newDataReferences[index],
@@ -246,7 +258,8 @@ export class EventFactory {
         objectDatum!.signers_pk_hash.list.map((pkh) => pkh.bytes)
       );
 
-      const outAmount = [
+      // Make sure the event token is transferred to the new utxo.
+      const outAmount: Asset[] = [
         {
           unit: utxo.output.amount.filter((t) => t.unit !== 'lovelace')[0].unit,
           quantity: utxo.output.amount.filter((t) => t.unit !== 'lovelace')[0].quantity
@@ -264,6 +277,7 @@ export class EventFactory {
         .txOutInlineDatumValue(newObjectDatum, 'JSON');
     });
 
+    // Use the wallet utxos as collateral for the transaction.
     walletUtxos.forEach((u) =>
       txBuilder.txInCollateral(
         u.input.txHash,
@@ -273,6 +287,7 @@ export class EventFactory {
       )
     );
 
+    // Add the WINTER fee as an output.
     txBuilder
       .txOut(this.feeAddress, [{ unit: 'lovelace', quantity: this.feeAmount.toString() }])
       .changeAddress(this.wallet.getChangeAddress());
@@ -312,7 +327,7 @@ export class EventFactory {
         if (!utxos[index].output.plutusData) {
           throw new Error('No Plutus data in utxo.');
         }
-        deserializeDatum<ObjectDatum>(utxos[index].output.plutusData!);
+        deserializeDatum<ObjectDatumFields>(utxos[index].output.plutusData!);
         //getEventDatum(utxos[index].output.plutusData!);
       } catch (e) {
         throw new Error('Issue building ObjectDatum from CBOR string.');
@@ -369,7 +384,7 @@ export class EventFactory {
     dataReferenceHex: string,
     eventCreationInfoTxHash: string,
     signersPkHash: string[]
-  ): PlutusData {
+  ): ObjectDatum {
     return conStr0([
       integer(protocolVersion),
       byteString(dataReferenceHex),
@@ -378,8 +393,8 @@ export class EventFactory {
     ]);
   }
 
-  public static getObjectDatumFromPlutusData(plutusData: string): ObjectDatum {
-    return deserializeDatum<ObjectDatum>(plutusData);
+  public static getObjectDatumFieldsFromPlutusData(plutusData: string): ObjectDatumFields {
+    return deserializeDatum<ObjectDatumFields>(plutusData);
   }
 
   public setObjectContract(objectDatumParameters: ObjectDatumParameters): this {
