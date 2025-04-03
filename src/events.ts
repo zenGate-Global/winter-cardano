@@ -1,4 +1,5 @@
 import {
+  applyCborEncoding,
   applyParamsToScript,
   Asset,
   byteString,
@@ -302,9 +303,9 @@ export class EventFactory {
     walletUtxos: UTxO[],
     events: UTxO[],
     KOIOS_URL?: string,
-    singletonContract?: PlutusScript
+    singletonContracts?: PlutusScript[]
   ): Promise<string> {
-    if (!KOIOS_URL && !singletonContract)
+    if (!KOIOS_URL && !singletonContracts)
       throw new Error('Either KOIOS_URL or singletonContracts must be provided.');
 
     const cardanoKoiosClient = KOIOS_URL ? new Koios(KOIOS_URL) : undefined;
@@ -340,11 +341,12 @@ export class EventFactory {
       // can burn the token.
       const scriptBytes = cardanoKoiosClient
         ? (await cardanoKoiosClient.scriptInfo([policyId]))[0].bytes
-        : singletonContract!.code;
+        : singletonContracts?.at(index)?.code;
 
+      // Script requires double CBOR encoding.
       const mintingScript: PlutusScript = {
         version: 'V2',
-        code: applyParamsToScript(scriptBytes, []) // What does this do?
+        code: applyCborEncoding(scriptBytes as string)
       };
 
       txBuilder
@@ -356,7 +358,7 @@ export class EventFactory {
         .mintPlutusScriptV2()
         .mint('-1', policyId, tokenName)
         .mintingScript(mintingScript.code)
-        .mintRedeemerValue(this.mintRedeemer)
+        .mintRedeemerValue(this.mintRedeemer, 'JSON')
         .txOut(recipientAddress, []);
     }
 
