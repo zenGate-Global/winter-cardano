@@ -1041,7 +1041,7 @@
     "@stricahq/cbors" "^1.0.3"
     pbkdf2 "^3.1.2"
 
-"@meshsdk/core@1.8.14", "@meshsdk/core@^1.5.10":
+"@meshsdk/core@1.8.14":
   version "1.8.14"
   resolved "https://registry.npmjs.org/@meshsdk/core/-/core-1.8.14.tgz"
   integrity sha512-Fe12cUnMIZztX4d84mqDYexk+p1TLa858wMfWBzyA3Di2XHNdrZBJoaSo1AJBcg1mjZI8Q/6fSDo2yJIW74f2A==
@@ -1053,18 +1053,6 @@
     "@meshsdk/react" "1.8.14"
     "@meshsdk/transaction" "1.8.14"
     "@meshsdk/wallet" "1.8.14"
-
-"@meshsdk/mesh-csl@^0.0.5":
-  version "0.0.5"
-  resolved "https://registry.npmjs.org/@meshsdk/mesh-csl/-/mesh-csl-0.0.5.tgz"
-  integrity sha512-rMHP+7l9NL5+T8J0ip67ZT05rgcborOX+/SXctIeS4s8150GtWfINFeN/QfTltrbtOWfc7eEaROmk9RIfZgZ6w==
-  dependencies:
-    "@meshsdk/core" "^1.5.10"
-    "@sidan-lab/sidan-csl-rs-browser" "^0.3.6"
-    "@sidan-lab/sidan-csl-rs-nodejs" "^0.3.6"
-    "@types/node" "^18.16.3"
-    blakejs "^1.2.1"
-    json-bigint "^1.0.0"
 
 "@meshsdk/provider@1.8.14":
   version "1.8.14"
@@ -1829,20 +1817,10 @@
   resolved "https://registry.npmjs.org/@sidan-lab/sidan-csl-rs-browser/-/sidan-csl-rs-browser-0.9.16.tgz"
   integrity sha512-cqAgCFGn6ggoI85DQF2EUCvFUVL+iWOlvseXXCl4Y0LMWVtNKZBbSvsgQQhVFzZ7N+lJ/yS7edlaDyh+Q74qcw==
 
-"@sidan-lab/sidan-csl-rs-browser@^0.3.6":
-  version "0.3.6"
-  resolved "https://registry.npmjs.org/@sidan-lab/sidan-csl-rs-browser/-/sidan-csl-rs-browser-0.3.6.tgz"
-  integrity sha512-CeFeGIjdPsyNqlQlYChf0s04yLbj/m1eAjBRG6jV2iEU1lFnNHHlebUS9wEJMH9LU4UT3cP4vHlex6hURuc4DA==
-
 "@sidan-lab/sidan-csl-rs-nodejs@0.9.16":
   version "0.9.16"
   resolved "https://registry.npmjs.org/@sidan-lab/sidan-csl-rs-nodejs/-/sidan-csl-rs-nodejs-0.9.16.tgz"
   integrity sha512-CFX6WzuHoD3NjspLs/sNU7WaQiJn/spHnGSjIL1chYFfEmO6JjmUgfCRoVUEm4eKlLjRfFV2/2rDRJYuvanwzg==
-
-"@sidan-lab/sidan-csl-rs-nodejs@^0.3.6":
-  version "0.3.6"
-  resolved "https://registry.npmjs.org/@sidan-lab/sidan-csl-rs-nodejs/-/sidan-csl-rs-nodejs-0.3.6.tgz"
-  integrity sha512-nyfTqWI2IQY+LQmXOaam3NUzZK6fF8h6lL1mB3otajLNXpEhc0ZDKv1QeV9ia5rmky799nrzLfwKtxuDmtRIfQ==
 
 "@sigstore/bundle@^1.1.0":
   version "1.1.0"
@@ -2048,7 +2026,7 @@
   dependencies:
     undici-types "~5.26.4"
 
-"@types/node@^18.11.18", "@types/node@^18.16.3":
+"@types/node@^18.11.18":
   version "18.19.83"
   resolved "https://registry.npmjs.org/@types/node/-/node-18.19.83.tgz"
   integrity sha512-D69JeR5SfFS5H6FLbUaS0vE4r1dGhmMBbG4Ed6BNS4wkDK8GZjsdCShT5LCN59vOHEUHnFCY9J4aclXlIphMkA==
@@ -2866,7 +2844,7 @@ blake2b@^2.1.4:
     blake2b-wasm "^2.4.0"
     nanoassert "^2.0.0"
 
-blakejs@^1.1.1, blakejs@^1.2.1:
+blakejs@^1.1.1:
   version "1.2.1"
   resolved "https://registry.npmjs.org/blakejs/-/blakejs-1.2.1.tgz"
   integrity sha512-QXUSXI3QVc/gJME0dBpXrag1kbzOqCjCX8/b54ntNyW6sjtoqxqRk3LTmXzaJoh71zMsDCjM+47jS7XiwN/+fQ==
