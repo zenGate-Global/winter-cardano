@@ -1,17 +1,19 @@
 require('dotenv').config();
-import { deserializeAddress, fromUTF8, MaestroProvider, PlutusScript, UTxO } from '@meshsdk/core';
+import {
+  BlockfrostProvider,
+  deserializeAddress,
+  fromUTF8,
+  PlutusScript,
+  UTxO
+} from '@meshsdk/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { EventFactory } from '../src/events';
 import { ObjectDatum, ObjectDatumFields, ObjectDatumParameters } from '../src';
 
 describe('Creating an EventFactory', async () => {
-  const network = 'Preview';
+  const provider = new BlockfrostProvider(process.env.BLOCKFROST_KEY as string);
+  const network = process.env.NETWORK as string;
   const mnemonic = process.env.MNEMONIC as string;
-  const provider = new MaestroProvider({
-    network: network,
-    apiKey: process.env.MAESTRO_KEY as string,
-    turboSubmit: false
-  });
 
   const eventFactory = new EventFactory(network, mnemonic, provider, provider, provider);
   const addr = eventFactory.wallet.getChangeAddress();
@@ -30,7 +32,6 @@ describe('Creating an EventFactory', async () => {
   const sharedEvents: UTxO[] = await eventFactory.getUtxosByOutRef([
     { txHash: previewTxHash, outputIndex: 0 }
   ]);
-  console.log('shared events: ', sharedEvents);
 
   const testCbor =
     'd8799f015f5840697066733a2f2f6261666b7265696169737835347979356c747033377a7932736a376c326b7067736f7372337266706f376e6878366f7a326535756a6d6a3432426369ff409f581c5afc8364f8733c895f54b5cf261b5efe71d3669f59ccad7439ccf289ffff';
