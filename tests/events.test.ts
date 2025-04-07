@@ -32,7 +32,6 @@ describe('Creating an EventFactory', async () => {
   const sharedEvents: UTxO[] = await eventFactory.getUtxosByOutRef([
     { txHash: previewTxHash, outputIndex: 0 }
   ]);
-  console.log('shared events: ', sharedEvents);
 
   const testCbor =
     'd8799f015f5840697066733a2f2f6261666b7265696169737835347979356c747033377a7932736a376c326b7067736f7372337266706f376e6878366f7a326535756a6d6a3432426369ff409f581c5afc8364f8733c895f54b5cf261b5efe71d3669f59ccad7439ccf289ffff';
@@ -49,7 +48,6 @@ describe('Creating an EventFactory', async () => {
 
   it('Should get the wallet utxos', async () => {
     const utxos = await eventFactory.getWalletUtxos();
-    console.log('wallet utxos: ', utxos);
     expect(utxos).toBeDefined();
     expectTypeOf(utxos).toEqualTypeOf<UTxO[]>();
   });
