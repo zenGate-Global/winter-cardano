@@ -1,17 +1,19 @@
 require('dotenv').config();
-import { deserializeAddress, fromUTF8, MaestroProvider, PlutusScript, UTxO } from '@meshsdk/core';
+import {
+  BlockfrostProvider,
+  deserializeAddress,
+  fromUTF8,
+  PlutusScript,
+  UTxO
+} from '@meshsdk/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { EventFactory } from '../src/events';
 import { ObjectDatum, ObjectDatumFields, ObjectDatumParameters } from '../src';
 
 describe('Creating an EventFactory', async () => {
-  const network = 'Preview';
+  const provider = new BlockfrostProvider(process.env.BLOCKFROST_KEY as string);
+  const network = process.env.NETWORK as string;
   const mnemonic = process.env.MNEMONIC as string;
-  const provider = new MaestroProvider({
-    network: network,
-    apiKey: process.env.MAESTRO_KEY as string,
-    turboSubmit: false
-  });
 
   const eventFactory = new EventFactory(network, mnemonic, provider, provider, provider);
   const addr = eventFactory.wallet.getChangeAddress();
@@ -47,6 +49,7 @@ describe('Creating an EventFactory', async () => {
 
   it('Should get the wallet utxos', async () => {
     const utxos = await eventFactory.getWalletUtxos();
+    console.log('wallet utxos: ', utxos);
     expect(utxos).toBeDefined();
     expectTypeOf(utxos).toEqualTypeOf<UTxO[]>();
   });

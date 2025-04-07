@@ -6,7 +6,7 @@ import {
   isValidNetwork,
   networkToId
 } from '../../src/utils/wallet';
-import { MaestroProvider, MeshWallet, Network } from '@meshsdk/core';
+import { BlockfrostProvider, MeshWallet, Network } from '@meshsdk/core';
 
 describe('Converting network type to id', () => {
   const testnets = ['testnet', 'preview', 'preprod'];
@@ -36,25 +36,17 @@ test('Valid networs sholuld be accepted', () => {
 });
 
 test('Creating MeshWallet should work', () => {
-  const provider = new MaestroProvider({
-    network: 'Preview',
-    apiKey: process.env.MAESTRO_KEY as string,
-    turboSubmit: false
-  });
-  const network = 'preview';
+  const provider = new BlockfrostProvider(process.env.BLOCKFROST_KEY as string);
+  const network = process.env.NETWORK as Network;
   const mnemonic = MeshWallet.brew();
   const wallet = getWallet(network, mnemonic, provider, provider);
   expectTypeOf(wallet).toEqualTypeOf<MeshWallet>();
   expect(wallet).toBeDefined();
 });
 
-test('Getting address public key hash should work', () => {
-  const provider = new MaestroProvider({
-    network: 'Preview',
-    apiKey: process.env.MAESTRO_KEY as string,
-    turboSubmit: false
-  });
-  const network = 'preview';
+test('Getting address public key hash should work', async () => {
+  const provider = new BlockfrostProvider(process.env.BLOCKFROST_KEY as string);
+  const network = process.env.NETWORK as Network;
   const mnemonic = MeshWallet.brew();
   const wallet = getWallet(network, mnemonic, provider, provider);
   const address = wallet.getChangeAddress();
