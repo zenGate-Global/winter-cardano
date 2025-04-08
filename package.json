@@ -3,7 +3,6 @@
   "license": "GPL-3.0-only",
   "type": "module",
   "types": "./dist/index.d.ts",
-  "typings": "./dist/index.d.ts",
   "files": [
     "./dist",
     "./src"
@@ -12,7 +11,7 @@
     ".": {
       "types": "./dist/index.d.ts",
       "require": "./dist/winter-cardano-mesh.cjs",
-      "default": "./dist/winter-cardano-mesh.js"
+      "import": "./dist/winter-cardano-mesh.mjs"
     }
   },
   "engines": {
@@ -29,7 +28,7 @@
     "release": "npm run build && npm publish"
   },
   "name": "winter-cardano-mesh",
-  "author": "Zengate",
+  "author": "zenGate Global",
   "description": "TypeScript implementation of the WINTER traceability protocol for Cardano blockchain.",
   "devDependencies": {
     "@types/json-bigint": "^1.0.4",
