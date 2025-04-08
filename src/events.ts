@@ -26,7 +26,6 @@ import {
   UTxO
 } from '@meshsdk/core';
 import { WINTER_FEE, WINTER_FEE_ADDRESS_MAINNET, WINTER_FEE_ADDRESS_TESTNET } from './utils/fee';
-import { Koios } from './koios';
 import type {
   ObjectDatum,
   ObjectDatumFields,
@@ -48,17 +47,13 @@ export class EventFactory {
 
   // Winter protocol contracts with applied parameters,
   // specific to this instance of the EventFactory.
-  public singletonContract: PlutusScript;
   public objectEventContract: PlutusScript;
   public objectEventContractAddress: string;
-  public objectDatum: ObjectDatum;
 
   public readonly recreateRedeemer: PlutusData;
   public readonly spendRedeemer: PlutusData;
   public readonly mintRedeemer: PlutusData;
   public readonly burnRedeemer: PlutusData;
-
-  private objectContractSetup: boolean = false;
 
   // Required EventFactory constructor information.
   public readonly wallet: MeshWallet;
@@ -141,9 +136,7 @@ export class EventFactory {
     ).address;
   }
 
-  public async mintSingleton(name: string, utxos: UTxO[]): Promise<string> {
-    if (!this.objectContractSetup)
-      throw new Error('setObjectContract must be called before mintSingleton');
+  public async mintSingleton(name: string, utxos: UTxO[], objectDatum: ObjectDatum): Promise<string> {
 
     // Apply parameters to the singleton script.
     // a. The first parameter is the token name of the singleton.
@@ -159,13 +152,13 @@ export class EventFactory {
     );
 
     // We save the contract in the EventFactory as a PlutusScript.
-    this.singletonContract = {
+    const singletonContract = {
       version: this.validators.singleton.version,
       code: singletonContractWithParamsScriptBytes
     };
 
     // We generate the policy id from the parameterized script.
-    const policyId = resolveScriptHash(this.singletonContract.code, this.singletonContract.version);
+    const policyId = resolveScriptHash(singletonContract.code, singletonContract.version);
 
     // We create a transaction builder to build our minting transaction.
     const txBuilder = new MeshTxBuilder({
@@ -180,7 +173,7 @@ export class EventFactory {
       .selectUtxosFrom(utxos)
       .mintPlutusScriptV2()
       .mint('1', policyId, hexName)
-      .mintingScript(this.singletonContract.code)
+      .mintingScript(singletonContract.code)
       .mintRedeemerValue(this.mintRedeemer, 'JSON')
       .txOut(this.objectEventContractAddress, [
         {
@@ -188,7 +181,7 @@ export class EventFactory {
           quantity: '1'
         }
       ])
-      .txOutInlineDatumValue(this.objectDatum, 'JSON')
+      .txOutInlineDatumValue(objectDatum, 'JSON')
       .changeAddress(this.wallet.getChangeAddress());
 
     // All inputs to the transaction will count as collateral utxos.
@@ -301,14 +294,8 @@ export class EventFactory {
     recipientAddress: string, // This should be the WINTER fee address in the future.
     signerAddress: string,
     walletUtxos: UTxO[],
-    events: UTxO[],
-    KOIOS_URL?: string,
-    singletonContracts?: PlutusScript[]
+    events: UTxO[]
   ): Promise<string> {
-    if (!KOIOS_URL && !singletonContracts)
-      throw new Error('Either KOIOS_URL or singletonContracts must be provided.');
-
-    const cardanoKoiosClient = KOIOS_URL ? new Koios(KOIOS_URL) : undefined;
 
     // We create a transaction builder to build our spend transaction.
     const txBuilder = new MeshTxBuilder({
@@ -412,16 +399,6 @@ export class EventFactory {
     return EventFactory.getObjectDatumFieldsFromObjectDatum(datum);
   }
 
-  public setObjectContract(objectDatumParameters: ObjectDatumParameters): this {
-    this.objectDatum = EventFactory.getObjectDatumFromParams(objectDatumParameters);
-    this.objectContractSetup = true;
-    return this;
-  }
-
-  public getObjectContractSetupStatus(): boolean {
-    return this.objectContractSetup;
-  }
-
   public async getWalletUtxos(): Promise<UTxO[]> {
     return await this.wallet.getUtxos();
   }
@@ -453,10 +430,6 @@ export class EventFactory {
 
     const utxos = await Promise.all(promises);
     return utxos.flat();
-  }
-
-  static async waitForTx(txHash: string): Promise<boolean> {
-    return true;
   }
 
   public async signTx(unsignedTx: string): Promise<string> {

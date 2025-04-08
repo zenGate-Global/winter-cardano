@@ -1,5 +1,4 @@
-import { ByteString, ConStr0, Integer, List, PubKeyHash } from '@meshsdk/core';
-import { ObjectDatum } from './plutus.types';
+import { ByteString, Integer, List, PubKeyHash } from '@meshsdk/core';
 
 // Use this for deserializing the datum,
 // since structural typing will let us use
@@ -13,7 +12,7 @@ export type ObjectDatumFields = {
 };
 
 // This object represents the ObjectDatum
-// using TypeScript primitive types, which
+// with TypeScript primitive types, which
 // we use to initially create the datum.
 export type ObjectDatumParameters = {
   protocolVersion: number;
