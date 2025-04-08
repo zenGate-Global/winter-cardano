@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     lib: {
       entry: 'src/index.ts',
-      name: 'WinterCardano',
+      name: 'winter-cardano-mesh',
       formats: ['cjs', 'es']
     },
     rollupOptions: {
