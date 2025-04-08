@@ -383,8 +383,9 @@ export class EventFactory {
   }
 
   public async getScriptInfo(scriptHash: string): Promise<string> {
-    const url = `https://cardano-mainnet.blockfrost.io/api/v0/scripts/${scriptHash}/cbor`;
+    const url = `https://cardano-${this.network}.blockfrost.io/api/v0/scripts/${scriptHash}/cbor`;
     const response = await this.fetcher.get(url);
+    console.log('getScriptInfo: ', response);
     return response.cbor as string;
   }
 
