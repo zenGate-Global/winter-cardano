@@ -339,14 +339,12 @@ export class EventFactory {
       // We get the minting script because
       // only the script that minted the token
       // can burn the token.
-      const scriptBytes = cardanoKoiosClient
-        ? (await cardanoKoiosClient.scriptInfo([policyId]))[0].bytes
-        : singletonContracts?.at(index)?.code;
+      const scriptBytes = await this.getScriptInfo(policyId);
 
       // Script requires double CBOR encoding.
       const mintingScript: PlutusScript = {
         version: 'V2',
-        code: applyCborEncoding(scriptBytes as string)
+        code: applyCborEncoding(scriptBytes)
       };
 
       txBuilder
@@ -382,6 +380,13 @@ export class EventFactory {
     txBuilder.reset();
 
     return unsignedTxHex;
+  }
+
+  public async getScriptInfo(scriptHash: string): Promise<string> {
+    const url = `https://cardano-${this.network}.blockfrost.io/api/v0/scripts/${scriptHash}/cbor`;
+    const response = await this.fetcher.get(url);
+    console.log('getScriptInfo: ', response);
+    return response.cbor as string;
   }
 
   public static getObjectDatumFromParams(params: ObjectDatumParameters): ObjectDatum {
