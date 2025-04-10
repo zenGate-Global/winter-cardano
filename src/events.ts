@@ -321,11 +321,12 @@ export class EventFactory {
     for (let index = 0; index < events.length; index++) {
       // This just checks for valid datum structure, it does not actually use the value.
       try {
-        if (events[index]!.output.plutusData) {
+        const event = events[index];
+        if (!event?.output.plutusData) {
           // TODO: Check this.
           throw new Error("No Plutus datum in utxo.");
         }
-        deserializeDatum<ObjectDatum>(events[index]!.output.plutusData!); // TODO: Check this.
+        deserializeDatum<ObjectDatum>(event?.output.plutusData); // TODO: Check this.
       } catch (e) {
         console.log(e);
         throw new Error("Issue building ObjectDatum from CBOR string.");

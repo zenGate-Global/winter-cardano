@@ -1,10 +1,11 @@
 {
 	"name": "lib-example-bun",
+	"version": "0.2.0-alpha",
 	"module": "index.ts",
 	"type": "module",
 	"scripts": {
 		"build": "bun bun.config.ts",
-		"test": "vitest",
+		"test": "vitest --typecheck",
 		"lint": "biome lint",
 		"format": "biome format",
 		"check": "biome check",
