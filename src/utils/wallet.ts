@@ -1,5 +1,6 @@
 import { deserializeAddress, MeshWallet } from "@meshsdk/core";
 import type { IFetcher, ISubmitter, Network } from "@meshsdk/core";
+
 export function isValidNetwork(network: string): network is Network {
   const validNetworks: Network[] = ["mainnet", "testnet", "preview", "preprod"];
   return validNetworks.includes(network.toLowerCase() as Network);
