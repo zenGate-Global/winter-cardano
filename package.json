@@ -1,5 +1,5 @@
 {
-	"name": "lib-example-bun",
+	"name": "winter-cardano-mesh",
 	"description": "TypeScript implementation of the WINTER traceability protocol for Cardano blockchain.",
 	"author": "zenGate Global",
 	"license": "GPL-3.0-only",
@@ -12,6 +12,12 @@
 			"types": "./dist/index.d.ts"
 		}
 	},
+	"size-limit": [
+		{
+			"path": "./dist/index.js",
+			"ignore": ["zlib", "events", "node:module"]
+		}
+	],
 	"scripts": {
 		"build": "bun bun.config.ts",
 		"test": "vitest --typecheck",
