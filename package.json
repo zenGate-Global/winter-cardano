@@ -30,6 +30,8 @@
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
 		"@types/bun": "latest",
+		"@types/lodash": "^4.17.16",
+		"bun-plugin-dts": "^0.3.0",
 		"dotenv": "^16.4.7",
 		"vitest": "^3.1.1"
 	},
