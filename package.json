@@ -21,9 +21,9 @@
 	"scripts": {
 		"build": "bun bun.config.ts",
 		"test": "vitest --typecheck",
+		"check": "biome check",
 		"lint": "biome lint",
 		"format": "biome format",
-		"check": "biome check",
 		"clean": "rm -rf ./dist && echo 'Done: Library output dist folder removed.'",
 		"reset": "rm -rf ./node_modules && echo 'Done: Node modules folder removed.'"
 	},

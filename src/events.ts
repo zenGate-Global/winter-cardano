@@ -1,21 +1,14 @@
 import {
   applyCborEncoding,
   applyParamsToScript,
-  type Asset,
   byteString,
   conStr0,
   deserializeAddress,
   deserializeDatum,
-  type IEvaluator,
-  type IFetcher,
   integer,
-  type ISubmitter,
   list,
   MeshTxBuilder,
   MeshWallet,
-  type Network,
-  type PlutusData,
-  type PlutusScript,
   pubKeyAddress,
   pubKeyHash,
   resolveScriptHash,
@@ -23,13 +16,25 @@ import {
   stringToHex,
   tokenName,
   txOutRef,
-  type UTxO,
 } from "@meshsdk/core";
+
+import type {
+  Asset,
+  IEvaluator,
+  IFetcher,
+  ISubmitter,
+  Network,
+  PlutusData,
+  PlutusScript,
+  UTxO,
+} from "@meshsdk/core";
+
 import {
   WINTER_FEE,
   WINTER_FEE_ADDRESS_MAINNET,
   WINTER_FEE_ADDRESS_TESTNET,
 } from "./utils/fee";
+
 import type {
   ObjectDatum,
   ObjectDatumFields,
@@ -37,7 +42,9 @@ import type {
   PlutusJson,
   EventFactoryValidators,
 } from "./types";
+
 import { VALIDATORS } from "./utils/plutus";
+
 import {
   getAddressPublicKeyHash,
   getWallet,

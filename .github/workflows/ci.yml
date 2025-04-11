@@ -1,0 +1,24 @@
+name: Continuous Integration
+on: [push]
+jobs:
+  build:
+    name: Check, Test, Build with Bun
+    runs-on: [ubuntu-latest, windows-latest, macOS-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies # (assuming your project has dependencies)
+        run: bun install # You can use npm/yarn/pnpm instead if you prefer
+
+      - name: Run Biome
+        run: bun run check
+
+      - name: Run Tests
+        run: bun run test
+
+      - name: Run Build
+        run: bun run build
