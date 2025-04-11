@@ -1,4 +1,4 @@
-import { ByteString, Integer, List, PubKeyHash } from '@meshsdk/core';
+import type { ByteString, Integer, List, PubKeyHash } from "@meshsdk/core";
 
 // Use this for deserializing the datum,
 // since structural typing will let us use

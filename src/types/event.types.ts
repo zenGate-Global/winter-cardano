@@ -1,4 +1,4 @@
-import { PlutusScript } from '@meshsdk/core';
+import type { PlutusScript } from "@meshsdk/core";
 
 export type EventFactoryValidators = {
   objectEvent: PlutusScript;
