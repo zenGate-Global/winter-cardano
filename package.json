@@ -19,14 +19,18 @@
 		"lint": "biome lint",
 		"format": "biome format",
 		"clean": "rm -rf ./dist && echo 'Done: Library output dist folder removed.'",
-		"reset": "rm -rf ./node_modules && echo 'Done: Node modules folder removed.'"
+		"reset": "rm -rf ./node_modules && echo 'Done: Node modules folder removed.'",
+		"prepare": "husky"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
+		"@commitlint/cli": "^19.8.0",
+		"@commitlint/config-conventional": "^19.8.0",
 		"@types/bun": "latest",
 		"@types/lodash": "^4.17.16",
 		"bun-plugin-dts": "^0.3.0",
 		"dotenv": "^16.4.7",
+		"husky": "^9.1.7",
 		"vitest": "^3.1.1"
 	},
 	"peerDependencies": {
