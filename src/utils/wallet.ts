@@ -1,13 +1,14 @@
-import { deserializeAddress, IFetcher, ISubmitter, MeshWallet, Network } from '@meshsdk/core';
+import { deserializeAddress, MeshWallet } from "@meshsdk/core";
+import type { IFetcher, ISubmitter, Network } from "@meshsdk/core";
 
 export function isValidNetwork(network: string): network is Network {
-  const validNetworks: Network[] = ['mainnet', 'testnet', 'preview', 'preprod'];
+  const validNetworks: Network[] = ["mainnet", "testnet", "preview", "preprod"];
   return validNetworks.includes(network.toLowerCase() as Network);
 }
 
 export function networkToId(network: Network): 0 | 1 {
   switch (network) {
-    case 'mainnet':
+    case "mainnet":
       return 1;
     default:
       return 0;
@@ -26,9 +27,9 @@ export function getWallet(
     fetcher,
     submitter,
     key: {
-      type: 'mnemonic',
-      words: typeof mnemonic === 'string' ? mnemonic.split(' ') : mnemonic
-    }
+      type: "mnemonic",
+      words: typeof mnemonic === "string" ? mnemonic.split(" ") : mnemonic,
+    },
   });
 }
 
