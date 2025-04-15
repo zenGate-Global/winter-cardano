@@ -2,17 +2,15 @@ name: Continuous Integration
 on: [push, pull_request]
 jobs:
   commitlint:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Install Dependencies
-        run: |
-          apt update
-          apt install -y sudo
-          sudo apt install -y git curl
-          curl -fsSL https://bun.sh/install | bash
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Print Versions
         run: |
           git --version

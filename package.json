@@ -1,5 +1,5 @@
 {
-	"name": "winter-cardano-mesh",
+	"name": "@zengate/winter-cardano-mesh",
 	"description": "TypeScript implementation of the WINTER traceability protocol for Cardano blockchain.",
 	"author": "zenGate Global",
 	"license": "GPL-3.0-only",
