@@ -17,6 +17,7 @@ jobs:
         run: |
           git --version
           bun --version
+          bunx commitlint --version
       - name: Install commitlint
         run: |
           bun install conventional-changelog-conventionalcommits
