@@ -26,6 +26,7 @@
 		"@biomejs/biome": "1.9.4",
 		"@commitlint/cli": "^19.8.0",
 		"@commitlint/config-conventional": "^19.8.0",
+		"@commitlint/prompt-cli": "^19.8.0",
 		"@types/bun": "latest",
 		"@types/lodash": "^4.17.16",
 		"bun-plugin-dts": "^0.3.0",
