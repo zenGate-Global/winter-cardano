@@ -1,3 +1,4 @@
+// @ts-nocheck
 import blueprint from './plutus.copy.json';
 
 import { ConStr0, ByteString, ConStr1, Integer, PubKeyHash, List } from '@meshsdk/core';

@@ -1,0 +1,50 @@
+name: Continuous Integration
+on: [push, pull_request]
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Print Versions
+        run: |
+          git --version
+          bun --version
+          bunx commitlint --version
+      - name: Install commitlint
+        run: |
+          bun install conventional-changelog-conventionalcommits
+          bun install commitlint@latest
+      - name: Validate Current Commit (last commit) with commitlint
+        if: github.event_name == 'push'
+        run: bunx commitlint --last --verbose
+
+      - name: Validate PR Commits with commitlint
+        if: github.event_name == 'pull_request'
+        run: bunx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+  build:
+    name: Check, Test, Build with Bun
+    runs-on: [ubuntu-latest, windows-latest, macOS-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Dependencies # (assuming your project has dependencies)
+        run: bun install # You can use npm/yarn/pnpm instead if you prefer
+
+      - name: Run Biome
+        run: bun run check
+
+      - name: Run Tests
+        run: bun run test
+
+      - name: Run Build
+        run: bun run build
