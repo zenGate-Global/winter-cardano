@@ -31,13 +31,7 @@ import type {
 
 import { WINTER_FEE, WINTER_FEE_ADDRESS_MAINNET, WINTER_FEE_ADDRESS_TESTNET } from "./utils/fee";
 
-import type {
-	EventFactoryValidators,
-	ObjectDatum,
-	ObjectDatumFields,
-	ObjectDatumParameters,
-	PlutusJson,
-} from "./types";
+import type { ObjectDatum, ObjectDatumFields, ObjectDatumParameters } from "./types";
 
 import { VALIDATORS } from "./utils/plutus";
 
