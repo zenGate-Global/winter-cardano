@@ -2,6 +2,10 @@ name: Release
 on:
   push:
     branches: ["main", "mesh"]
+  workflow_run:
+    workflows: ["Continuous Integration"]
+    types:
+      - completed
 
 permissions:
   contents: read # for checkout
