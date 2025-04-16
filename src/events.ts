@@ -142,73 +142,78 @@ export class EventFactory {
     utxos: UTxO[],
     objectDatum: ObjectDatum
   ): Promise<string> {
-    // Apply parameters to the singleton script.
-    // a. The first parameter is the token name of the singleton.
-    // b. The second parameter is the output reference used for the one-shot minting policy.
-    const hexName = stringToHex(name);
-    const tName = tokenName(hexName);
-    //const outputRef = outputReference(utxos[0].input.txHash, utxos[0].input.outputIndex);
-    const outputRef = txOutRef(
-      utxos[0]!.input.txHash, // TODO: Check these things.
-      utxos[0]!.input.outputIndex
-    );
-    const singletonContractWithParamsScriptBytes = applyParamsToScript(
-      VALIDATORS.singletonMint.code,
-      [tName, outputRef],
-      "JSON"
-    );
+    try {
+      // Apply parameters to the singleton script.
+      // a. The first parameter is the token name of the singleton.
+      // b. The second parameter is the output reference used for the one-shot minting policy.
+      const hexName = stringToHex(name);
+      const tName = tokenName(hexName);
+      //const outputRef = outputReference(utxos[0].input.txHash, utxos[0].input.outputIndex);
+      const outputRef = txOutRef(
+        utxos[0]!.input.txHash, // TODO: Check these things.
+        utxos[0]!.input.outputIndex
+      );
+      const singletonContractWithParamsScriptBytes = applyParamsToScript(
+        VALIDATORS.singletonMint.code,
+        [tName, outputRef],
+        "JSON"
+      );
 
-    // We save the contract in the EventFactory as a PlutusScript.
-    const singletonContract = {
-      version: VALIDATORS.singletonMint.version,
-      code: singletonContractWithParamsScriptBytes,
-    };
+      // We save the contract in the EventFactory as a PlutusScript.
+      const singletonContract = {
+        version: VALIDATORS.singletonMint.version,
+        code: singletonContractWithParamsScriptBytes,
+      };
 
-    // We generate the policy id from the parameterized script.
-    const policyId = resolveScriptHash(
-      singletonContract.code,
-      singletonContract.version
-    );
+      // We generate the policy id from the parameterized script.
+      const policyId = resolveScriptHash(
+        singletonContract.code,
+        singletonContract.version
+      );
 
-    // We create a transaction builder to build our minting transaction.
-    const txBuilder = new MeshTxBuilder({
-      fetcher: this.fetcher,
-      submitter: this.submitter,
-      evaluator: this.evaluator,
-      verbose: true,
-    });
+      // We create a transaction builder to build our minting transaction.
+      const txBuilder = new MeshTxBuilder({
+        fetcher: this.fetcher,
+        submitter: this.submitter,
+        evaluator: this.evaluator,
+        verbose: true,
+      });
 
-    // The singleton script does not require any redeemer.
-    txBuilder
-      .selectUtxosFrom(utxos)
-      .mintPlutusScriptV2()
-      .mint("1", policyId, hexName)
-      .mintingScript(singletonContract.code)
-      .mintRedeemerValue(this.mintRedeemer, "JSON")
-      .txOut(this.objectEventContractAddress, [
-        {
-          unit: policyId + hexName,
-          quantity: "1",
-        },
-      ])
-      .txOutInlineDatumValue(objectDatum, "JSON")
-      .changeAddress(this.wallet.getChangeAddress());
+      // The singleton script does not require any redeemer.
+      txBuilder
+        .selectUtxosFrom(utxos)
+        .mintPlutusScriptV2()
+        .mint("1", policyId, hexName)
+        .mintingScript(singletonContract.code)
+        .mintRedeemerValue(this.mintRedeemer, "JSON")
+        .txOut(this.objectEventContractAddress, [
+          {
+            unit: policyId + hexName,
+            quantity: "1",
+          },
+        ])
+        .txOutInlineDatumValue(objectDatum, "JSON")
+        .changeAddress(this.wallet.getChangeAddress());
 
-    // All inputs to the transaction will count as collateral utxos.
-    utxos.forEach((u) =>
-      txBuilder.txInCollateral(
-        u.input.txHash,
-        u.input.outputIndex,
-        u.output.amount,
-        u.output.address
-      )
-    );
+      // All inputs to the transaction will count as collateral utxos.
+      utxos.forEach((u) =>
+        txBuilder.txInCollateral(
+          u.input.txHash,
+          u.input.outputIndex,
+          u.output.amount,
+          u.output.address
+        )
+      );
 
-    // Complete the transaction building and obtain the unsigned transaction.
-    const unsignedTxHex = await txBuilder.complete();
-    txBuilder.reset();
+      // Complete the transaction building and obtain the unsigned transaction.
+      const unsignedTxHex = await txBuilder.complete();
+      txBuilder.reset();
 
-    return unsignedTxHex;
+      return unsignedTxHex;
+    } catch (error) {
+      console.log("Error minting singleton: ", error);
+      throw error;
+    }
   }
 
   public async recreate(

@@ -20,7 +20,8 @@
 		"format": "biome format",
 		"clean": "rm -rf ./dist && echo 'Done: Library output dist folder removed.'",
 		"reset": "rm -rf ./node_modules && echo 'Done: Node modules folder removed.'",
-		"prepare": "husky"
+		"prepare": "husky",
+		"commit": "commit"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
