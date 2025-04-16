@@ -229,88 +229,101 @@ export class EventFactory {
       verbose: true,
     });
 
-    txBuilder.selectUtxosFrom(walletUtxos);
-
     // 1. Check that the event utxos have an object datum
     //    and that the data reference is different.
     // 2. Recreate ObjectDatum.
     // 3. Add recreated event to transaction.
     events.forEach((utxo, index) => {
-      let objectDatum: ObjectDatumFields;
       try {
         if (!utxo.output.plutusData) {
           throw new Error("No Plutus data in event utxo.");
         }
-        objectDatum = EventFactory.getObjectDatumFieldsFromPlutusCbor(
-          utxo.output.plutusData
+
+        let objectDatum: ObjectDatumFields =
+          EventFactory.getObjectDatumFieldsFromPlutusCbor(
+            utxo.output.plutusData
+          );
+
+        console.log("test_recreate_datum: ", objectDatum);
+
+        if (!objectDatum) {
+          throw new Error("Issue building ObjectDatum from CBOR string.");
+        }
+
+        if (objectDatum.data_reference_hex.bytes === newDataReferences[index]) {
+          throw new Error("Data references cannot be the same.");
+        }
+
+        // Construct the new object datum.
+        // All paremeters are recreated other than the data reference.
+        const params: ObjectDatumParameters = {
+          protocolVersion: objectDatum!.protocol_version.int as number,
+          dataReferenceHex: newDataReferences[index]!, // TODO: Check these things.
+          eventCreationInfoTxHash:
+            objectDatum!.event_creation_info_tx_hash.bytes === ""
+              ? utxo.input.txHash
+              : objectDatum!.event_creation_info_tx_hash.bytes,
+          signersPkHash: objectDatum!.signers_pk_hash.list.map(
+            (pkh) => pkh.bytes
+          ),
+        };
+        const newObjectDatum = EventFactory.getObjectDatumFromParams(params);
+
+        // Make sure the event token is transferred to the new utxo.
+        const tokenFilter = utxo.output.amount.filter(
+          (t) => t.unit !== "lovelace"
         );
-      } catch (e) {
-        throw new Error("Issue building ObjectDatum from CBOR string.");
+
+        if (!tokenFilter || tokenFilter.length == 0) {
+          throw new Error("No event token found.");
+        }
+        const asset = tokenFilter.at(0)!;
+
+        const outAmount: Asset[] = [asset];
+
+        txBuilder
+          .spendingPlutusScriptV2()
+          .txIn(utxo.input.txHash, utxo.input.outputIndex)
+          .txInInlineDatumPresent()
+          .txInRedeemerValue(this.recreateRedeemer, "JSON")
+          .txInScript(this.objectEventContract.code)
+          .requiredSignerHash(getAddressPublicKeyHash(signerAddress))
+          .txOut(utxo.output.address, outAmount)
+          .txOutInlineDatumValue(newObjectDatum, "JSON");
+      } catch (error) {
+        console.log("Error building recreate transaction: ", error);
+        throw error;
       }
-      console.log("test_recreate_datum: ", objectDatum);
-
-      if (objectDatum.data_reference_hex.bytes === newDataReferences[index]) {
-        throw new Error("Data references cannot be the same.");
-      }
-
-      // Construct the new object datum.
-      // All paremeters are recreated other than the data reference.
-      const params: ObjectDatumParameters = {
-        protocolVersion: objectDatum!.protocol_version.int as number,
-        dataReferenceHex: newDataReferences[index]!, // TODO: Check these things.
-        eventCreationInfoTxHash:
-          objectDatum!.event_creation_info_tx_hash.bytes === ""
-            ? utxo.input.txHash
-            : objectDatum!.event_creation_info_tx_hash.bytes,
-        signersPkHash: objectDatum!.signers_pk_hash.list.map(
-          (pkh) => pkh.bytes
-        ),
-      };
-      const newObjectDatum = EventFactory.getObjectDatumFromParams(params);
-
-      // Make sure the event token is transferred to the new utxo.
-      const outAmount: Asset[] = [
-        {
-          unit: utxo.output.amount.filter((t) => t.unit !== "lovelace")[0]!
-            .unit, // TODO: Check this.
-          quantity: utxo.output.amount!.filter((t) => t.unit !== "lovelace")[0]!
-            .quantity,
-        },
-      ];
-
-      txBuilder
-        .spendingPlutusScriptV2()
-        .txIn(utxo.input.txHash, utxo.input.outputIndex)
-        .txInInlineDatumPresent()
-        .txInRedeemerValue(this.recreateRedeemer, "JSON")
-        .txInScript(this.objectEventContract.code)
-        .requiredSignerHash(getAddressPublicKeyHash(signerAddress))
-        .txOut(utxo.output.address, outAmount)
-        .txOutInlineDatumValue(newObjectDatum, "JSON");
     });
 
-    // Use the wallet utxos as collateral for the transaction.
-    walletUtxos.forEach((u) =>
-      txBuilder.txInCollateral(
-        u.input.txHash,
-        u.input.outputIndex,
-        u.output.amount,
-        u.output.address
-      )
-    );
+    try {
+      // Use the wallet utxos as collateral for the transaction.
+      walletUtxos.forEach((u) =>
+        txBuilder.txInCollateral(
+          u.input.txHash,
+          u.input.outputIndex,
+          u.output.amount,
+          u.output.address
+        )
+      );
 
-    // Add the WINTER fee as an output.
-    txBuilder
-      .txOut(this.feeAddress, [
-        { unit: "lovelace", quantity: this.feeAmount.toString() },
-      ])
-      .changeAddress(this.wallet.getChangeAddress());
+      // Add the WINTER fee as an output.
+      txBuilder
+        .txOut(this.feeAddress, [
+          { unit: "lovelace", quantity: this.feeAmount.toString() },
+        ])
+        .changeAddress(this.wallet.getChangeAddress())
+        .selectUtxosFrom(walletUtxos);
 
-    const unsignedTx = await txBuilder.complete();
+      const unsignedTx = await txBuilder.complete();
 
-    txBuilder.reset();
+      txBuilder.reset();
 
-    return unsignedTx;
+      return unsignedTx;
+    } catch (error) {
+      console.log("Error building recreate transaction: ", error);
+      throw error;
+    }
   }
 
   public async spend(
