@@ -1,5 +1,5 @@
 export const WINTER_FEE_ADDRESS_MAINNET: string =
-  'addr1qxjdck4m9tuyntrl7pzk9wcn72m69tg7j8jspth23ukrckznwg3wwvez2rdm9mql46l3pyrnyu05dufnj6luz68qw8wskunkmc';
+	"addr1qxjdck4m9tuyntrl7pzk9wcn72m69tg7j8jspth23ukrckznwg3wwvez2rdm9mql46l3pyrnyu05dufnj6luz68qw8wskunkmc";
 export const WINTER_FEE_ADDRESS_TESTNET: string =
-  'addr_test1qqr585tvlc7ylnqvz8pyqwauzrdu0mxag3m7q56grgmgu7sxu2hyfhlkwuxupa9d5085eunq2qywy7hvmvej456flknswgndm3';
+	"addr_test1qqr585tvlc7ylnqvz8pyqwauzrdu0mxag3m7q56grgmgu7sxu2hyfhlkwuxupa9d5085eunq2qywy7hvmvej456flknswgndm3";
 export const WINTER_FEE: number = 1000000;
