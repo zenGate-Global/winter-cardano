@@ -211,7 +211,6 @@ export class EventFactory {
 
       return unsignedTxHex;
     } catch (error) {
-      console.log("Error minting singleton: ", error);
       throw error;
     }
   }
@@ -243,8 +242,6 @@ export class EventFactory {
           EventFactory.getObjectDatumFieldsFromPlutusCbor(
             utxo.output.plutusData
           );
-
-        console.log("test_recreate_datum: ", objectDatum);
 
         if (!objectDatum) {
           throw new Error("Issue building ObjectDatum from CBOR string.");
@@ -291,7 +288,6 @@ export class EventFactory {
           .txOut(utxo.output.address, outAmount)
           .txOutInlineDatumValue(newObjectDatum, "JSON");
       } catch (error) {
-        console.log("Error building recreate transaction: ", error);
         throw error;
       }
     });
@@ -321,7 +317,6 @@ export class EventFactory {
 
       return unsignedTx;
     } catch (error) {
-      console.log("Error building recreate transaction: ", error);
       throw error;
     }
   }
@@ -341,15 +336,12 @@ export class EventFactory {
 
     events.forEach(async (utxo, index) => {
       if (!utxo.output.plutusData) {
-        const error = new Error("No Plutus datum in event utxo.");
-        console.log("Error building spend transaction: ", error);
-        throw error;
+        throw new Error("No Plutus datum in event utxo.");
       }
 
       try {
         deserializeDatum<ObjectDatum>(utxo.output.plutusData!);
       } catch (error) {
-        console.log("Error building spend transaction: ", error);
         throw new Error("Issue building ObjectDatum from CBOR string.");
       }
 
@@ -389,7 +381,6 @@ export class EventFactory {
           .mintRedeemerValue(this.mintRedeemer, "JSON")
           .txOut(recipientAddress, []);
       } catch (error) {
-        console.log("Error building spend transaction: ", error);
         throw error;
       }
     });
@@ -420,7 +411,6 @@ export class EventFactory {
 
       return unsignedTxHex;
     } catch (error) {
-      console.log("Error building spend transaction: ", error);
       throw error;
     }
   }
@@ -428,7 +418,6 @@ export class EventFactory {
   public async getScriptInfo(scriptHash: string): Promise<string> {
     const url = `https://cardano-${this.network}.blockfrost.io/api/v0/scripts/${scriptHash}/cbor`;
     const response = await this.fetcher.get(url);
-    console.log("getScriptInfo: ", response);
     return response.cbor as string;
   }
 
