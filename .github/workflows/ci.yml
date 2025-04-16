@@ -45,6 +45,10 @@ jobs:
 
       - name: Run Tests
         run: bun run test
+        env:
+          MNEMONIC: ${{ secrets.MNEMONIC }}
+          BLOCKFROST_KEY: ${{ secrets.BLOCKFROST_KEY }}
+          NETWORK: ${{ secrets.NETWORK }}
 
       - name: Run Build
         run: bun run build
