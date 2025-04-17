@@ -2,8 +2,7 @@ name: Release
 on:
   workflow_run:
     workflows: ["Continuous Integration"]
-    types:
-      - completed
+    types: [completed]
 
 permissions:
   contents: read # for checkout
