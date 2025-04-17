@@ -1,7 +1,5 @@
 name: Release
 on:
-  push:
-    branches: ["main", "mesh"]
   workflow_run:
     workflows: ["Continuous Integration"]
     types:
@@ -12,6 +10,7 @@ permissions:
 
 jobs:
   release:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write # to be able to publish a GitHub release
