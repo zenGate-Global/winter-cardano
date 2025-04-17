@@ -5,6 +5,7 @@
 	"license": "GPL-3.0-only",
 	"version": "0.1.0",
 	"keywords": ["cardano", "traceability", "winter-protocol"],
+	"files": ["dist", "index.js", "index.d.ts"],
 	"publishConfig": {
 		"access": "public"
 	},
