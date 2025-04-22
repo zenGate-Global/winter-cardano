@@ -9,7 +9,7 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"module": "./src/index.ts",
+	"main": "./dist/index.js",
 	"type": "module",
 	"exports": {
 		".": {
