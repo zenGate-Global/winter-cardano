@@ -9,13 +9,11 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"module": "./dist/index.js",
 	"type": "module",
 	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"types": "./dist/index.d.ts"
-		}
+		"require": "./dist/cjs/index.js",
+		"import": "./dist/esm/index.js",
+		"types": "./dist/esm/index.d.ts"
 	},
 	"scripts": {
 		"build": "bun bun.config.ts",
