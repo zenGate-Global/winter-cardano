@@ -12,7 +12,8 @@ try {
 		sourcemap: "none",
 		minify: false,
 		splitting: false,
-		external: ["@meshsd/core"],
+		external: undefined,
+		packages: "external",
 		plugins: [dts()],
 	});
 
@@ -27,7 +28,8 @@ try {
 		sourcemap: "none",
 		minify: false,
 		splitting: false,
-		external: ["@meshsdk/core"],
+		external: undefined,
+		packages: "external",
 	});
 
 	if (ecmascript.success) {
