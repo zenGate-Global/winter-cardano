@@ -11,9 +11,9 @@
 	},
 	"type": "module",
 	"exports": {
+		"types": "./dist/index.d.ts",
 		"require": "./dist/index.cjs",
-		"import": "./dist/index.mjs",
-		"types": "./dist/index.d.ts"
+		"import": "./dist/index.mjs"
 	},
 	"scripts": {
 		"build": "bun bun.config.ts",
@@ -36,6 +36,7 @@
 		"bun-plugin-dts": "^0.3.0",
 		"conventional-changelog-conventionalcommits": "^8.0.0",
 		"dotenv": "^16.4.7",
+		"esbuild": "0.25.3",
 		"husky": "^9.1.7",
 		"semantic-release": "^24.2.3",
 		"vitest": "^3.1.1"
