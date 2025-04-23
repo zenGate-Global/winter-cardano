@@ -24,10 +24,9 @@ const commonjs = await Bun.build({
 	sourcemap: "none",
 	minify: false,
 	splitting: false,
-	external: undefined
+	external: undefined,
 });
 
 if (commonjs.success) {
 	console.log("CommonJS build complete.");
 }
-
