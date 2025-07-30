@@ -14,6 +14,7 @@ See here for docs website: https://palmyra-docs.vercel.app/docs/Cardano/winter
 * [Minting](#minting)
 * [Recreation](#recreation)
 * [Spending](#spending)
+* [Best Practices Guide](#best-practices-guide)
 
 ---
 
@@ -266,6 +267,75 @@ await winterEvent.waitForTx(txHash);
 ```
 
 ---
+
+## Best Practices Guide
+### Security & Key Management
+
+Wallet Isolation
+
+Guideline: It is strongly recommended to use a dedicated Cardano wallet (and thus a unique 24-word mnemonic) exclusively for the Winter Backend.
+
+API Key Management
+
+Guideline: Restrict API keys (like Maestro or NFT.Storage) with IP whitelisting or other available security features.
+
+On-Chain Data & Transaction Management
+
+This section focuses on the "blockchain" aspect: cost, permanence, and efficiency.
+
+Data Immutability
+
+Guideline: Data submitted to the blockchain is permanent. Before creating an event, validate all metadata and parameters in your application layer. The error-declaration event is for correcting logical errors, not for fixing simple typos.
+
+Efficient Transaction Batching
+
+Guideline: Whenever possible, batch multiple operations into a single transaction. For example, when using the recreate or spend functions, you can process multiple UTXOs at once.
+
+UTXO Management Strategy
+
+Guideline: Your application should be aware of its UTXO state. Avoid creating many small "dust" UTXOs. If your application logic allows, periodically consolidate UTXOs into larger ones to simplify management and reduce future transaction sizes (thus less fees).
+
+Handling Transaction Confirmations
+
+Guideline: Always use await winterEvent.waitForTx(txHash) or a similar confirmation-checking mechanism before attempting to use the outputs of a transaction you just submitted. Rollbacks are also a possibility, so its best to even wait for a few blocks to pass.
+
+### Backend Deployment & Operations
+
+This is for users running your winter-backend-cardano service.
+
+Production vs. Development Configuration
+
+Guideline: For production environments, always set POSTGRES_SYNC=false. Only set it to true during initial setup or active development.
+
+Reasoning: POSTGRES_SYNC=true can cause destructive changes to your database schema and data if the TypeORM entities are modified. It is also inefficient for a running application.
+
+Database & Redis Backups
+
+Guideline: Implement a regular backup strategy for your PostgreSQL database and your Redis instance. Your PostgreSQL data contains a historical record of events, and your Redis data is critical for live UTXO management.
+
+Reasoning: While the blockchain is the ultimate source of truth, your local database provides fast querying capabilities. Losing the Redis UTXO lock data could lead to temporary service interruptions or transaction failures until the state is rebuilt.
+
+### Monitoring and Logging
+
+Guideline: Integrate the backend with a logging and monitoring service. Key metrics to watch include: API endpoint error rates (4xx/5xx), transaction submission failures, database query latency, and Redis connectivity.
+
+Reasoning: Proactive monitoring allows you to detect issues like a failing Cardano API provider, database performance degradation, or bugs in your application logic before they impact users.
+
+### Metadata & Off-Chain Storage
+
+This section is about the data before it gets referenced on-chain.
+
+Metadata Consistency
+
+Guideline: Define and enforce a consistent schema for your metadata within your own application before submitting it. For example, ensure all dates are in ISO 8601 format and that predefined keys (e.g., "District", "Quality") use a consistent set of values.
+
+Reasoning: This practice ensures that the data being traced is reliable and machine-readable, maximizing the value of the traceability system.
+
+IPFS Pinning Strategy
+
+Guideline: Understand the data persistence policy of your IPFS provider (e.g., NFT.Storage). For critical, long-term data, consider running your own IPFS node or using a dedicated pinning service to ensure your metadata remains available indefinitely.
+
+Reasoning: The blockchain only stores a link (the CID) to the metadata. If the data is no longer available on the IPFS network, that link becomes useless.
 
 ## License
 
