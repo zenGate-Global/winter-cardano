@@ -339,4 +339,4 @@ Reasoning: The blockchain only stores a link (the CID) to the metadata. If the d
 
 ## License
 
-MIT
+[View License](LICENSE)
