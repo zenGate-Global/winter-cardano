@@ -197,22 +197,19 @@ export class EventFactory {
 		}
 	}
 
-  public async deployReference(
-    deploymentAddress: string,
-    singletonName: string,
-    utxoRef: {
-      txHash: string,
-      outputIndex: number,
-    },
-    utxos: UTxO[],
+	public async deployReference(
+		deploymentAddress: string,
+		singletonName: string,
+		utxoRef: {
+			txHash: string;
+			outputIndex: number;
+		},
+		utxos: UTxO[],
 	): Promise<string> {
 		try {
 			const hexName = stringToHex(singletonName);
 			const tName = tokenName(hexName);
-			const outputRef = txOutRef(
-				utxoRef.txHash,
-				utxoRef.outputIndex,
-			);
+			const outputRef = txOutRef(utxoRef.txHash, utxoRef.outputIndex);
 			const singletonContractWithParamsScriptBytes = applyParamsToScript(
 				VALIDATORS.singletonMint.code,
 				[tName, outputRef],
@@ -233,7 +230,7 @@ export class EventFactory {
 
 			txBuilder
 				.selectUtxosFrom(utxos)
-        .txOutReferenceScript(singletonContract.code, singletonContract.version)
+				.txOutReferenceScript(singletonContract.code, singletonContract.version)
 				.txOut(deploymentAddress, [])
 				.changeAddress(this.wallet.getChangeAddress());
 
@@ -262,7 +259,7 @@ export class EventFactory {
 		walletUtxos: UTxO[],
 		events: UTxO[],
 		newDataReferences: string[],
-    utxoRef: { txHash: string, outputIndex: number } | undefined,
+		utxoRef: { txHash: string; outputIndex: number } | undefined,
 	): Promise<string> {
 		// We create a transaction builder to build our recreate transaction.
 		const txBuilder = new MeshTxBuilder({
@@ -346,11 +343,11 @@ export class EventFactory {
 				.changeAddress(this.wallet.getChangeAddress())
 				.selectUtxosFrom(walletUtxos);
 
-      if (utxoRef) {
-        txBuilder.spendingTxInReference(utxoRef.txHash, utxoRef.outputIndex);
-      } else {
-        txBuilder.txInScript(this.objectEventContract.code)
-      }
+			if (utxoRef) {
+				txBuilder.spendingTxInReference(utxoRef.txHash, utxoRef.outputIndex);
+			} else {
+				txBuilder.txInScript(this.objectEventContract.code);
+			}
 
 			const unsignedTx = await txBuilder.complete();
 
