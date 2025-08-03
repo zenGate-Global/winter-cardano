@@ -20,12 +20,14 @@ import {
 
 import type {
 	Asset,
+	ByteString,
 	IEvaluator,
 	IFetcher,
 	ISubmitter,
 	Network,
 	PlutusData,
 	PlutusScript,
+	TxOutRef,
 	UTxO,
 } from "@meshsdk/core";
 
@@ -195,11 +197,72 @@ export class EventFactory {
 		}
 	}
 
+  public async deployReference(
+    deploymentAddress: string,
+    singletonName: string,
+    utxoRef: {
+      txHash: string,
+      outputIndex: number,
+    },
+    utxos: UTxO[],
+	): Promise<string> {
+		try {
+			const hexName = stringToHex(singletonName);
+			const tName = tokenName(hexName);
+			const outputRef = txOutRef(
+				utxoRef.txHash,
+				utxoRef.outputIndex,
+			);
+			const singletonContractWithParamsScriptBytes = applyParamsToScript(
+				VALIDATORS.singletonMint.code,
+				[tName, outputRef],
+				"JSON",
+			);
+
+			const singletonContract = {
+				version: VALIDATORS.singletonMint.version,
+				code: singletonContractWithParamsScriptBytes,
+			};
+
+			const txBuilder = new MeshTxBuilder({
+				fetcher: this.fetcher,
+				submitter: this.submitter,
+				evaluator: this.evaluator,
+				verbose: true,
+			});
+
+			txBuilder
+				.selectUtxosFrom(utxos)
+        .txOutReferenceScript(singletonContract.code, singletonContract.version)
+				.txOut(deploymentAddress, [])
+				.changeAddress(this.wallet.getChangeAddress());
+
+			// All inputs to the transaction will count as collateral utxos.
+			utxos.forEach((u) =>
+				txBuilder.txInCollateral(
+					u.input.txHash,
+					u.input.outputIndex,
+					u.output.amount,
+					u.output.address,
+				),
+			);
+
+			// Complete the transaction building and obtain the unsigned transaction.
+			const unsignedTxHex = await txBuilder.complete();
+			txBuilder.reset();
+
+			return unsignedTxHex;
+		} catch (error) {
+			throw error;
+		}
+	}
+
 	public async recreate(
 		signerAddress: string,
 		walletUtxos: UTxO[],
 		events: UTxO[],
 		newDataReferences: string[],
+    utxoRef: { txHash: string, outputIndex: number } | undefined,
 	): Promise<string> {
 		// We create a transaction builder to build our recreate transaction.
 		const txBuilder = new MeshTxBuilder({
@@ -258,7 +321,6 @@ export class EventFactory {
 					.txIn(utxo.input.txHash, utxo.input.outputIndex)
 					.txInInlineDatumPresent()
 					.txInRedeemerValue(this.recreateRedeemer, "JSON")
-					.txInScript(this.objectEventContract.code)
 					.requiredSignerHash(getAddressPublicKeyHash(signerAddress))
 					.txOut(utxo.output.address, outAmount)
 					.txOutInlineDatumValue(newObjectDatum, "JSON");
@@ -283,6 +345,12 @@ export class EventFactory {
 				.txOut(this.feeAddress, [{ unit: "lovelace", quantity: this.feeAmount.toString() }])
 				.changeAddress(this.wallet.getChangeAddress())
 				.selectUtxosFrom(walletUtxos);
+
+      if (utxoRef) {
+        txBuilder.spendingTxInReference(utxoRef.txHash, utxoRef.outputIndex);
+      } else {
+        txBuilder.txInScript(this.objectEventContract.code)
+      }
 
 			const unsignedTx = await txBuilder.complete();
 
