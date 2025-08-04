@@ -5,12 +5,11 @@ import {
 	applyParamsToScript,
 	byteString,
 	conStr0,
-	deserializeAddress,
 	deserializeDatum,
 	integer,
 	list,
-	pubKeyAddress,
 	pubKeyHash,
+	resolvePaymentKeyHash,
 	resolveScriptHash,
 	serializePlutusScript,
 	stringToHex,
@@ -20,6 +19,7 @@ import {
 
 import type {
 	Asset,
+	Data,
 	IEvaluator,
 	IFetcher,
 	ISubmitter,
@@ -91,17 +91,18 @@ export class EventFactory {
 		// Apply parameters to the object event script.
 		// a. The first parameter is the payment credential of the Winter fee address.
 		// b. The second parameter is the fee amount.
-		const deserializedAddr = deserializeAddress(this.feeAddress);
-		const paymentCredential = pubKeyAddress(
-			deserializedAddr.pubKeyHash,
-			deserializedAddr.stakeCredentialHash,
-			false,
-		);
-		const feeAmount = integer(this.feeAmount);
+
+		const vfk = resolvePaymentKeyHash(this.feeAddress);
+
+		const serializedPaymentCredential: Data = {
+			alternative: 0,
+			fields: [vfk],
+		};
+
 		const objectEventContractWithParamsScriptBytes = applyParamsToScript(
 			VALIDATORS.objectEvent.code,
-			[paymentCredential, feeAmount],
-			"JSON",
+			[serializedPaymentCredential, this.feeAmount],
+			"Mesh",
 		);
 
 		// We save the contract in the EventFactory as a PlutusScript
@@ -114,9 +115,9 @@ export class EventFactory {
 		// which is the Bech32 encoding of the PlutusScript bytes.
 		this.objectEventContractAddress = serializePlutusScript(
 			this.objectEventContract,
-			deserializedAddr.stakeCredentialHash,
+			undefined,
 			this.networkId,
-			false,
+			undefined,
 		).address;
 	}
 
@@ -314,7 +315,6 @@ export class EventFactory {
 				const outAmount: Asset[] = [asset];
 
 				txBuilder
-					.setNetwork("preprod")
 					.spendingPlutusScriptV2()
 					.txIn(utxo.input.txHash, utxo.input.outputIndex)
 					.txInInlineDatumPresent()
