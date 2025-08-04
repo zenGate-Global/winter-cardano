@@ -231,7 +231,7 @@ export class EventFactory {
 			txBuilder
 				.selectUtxosFrom(utxos)
 				.txOut(deploymentAddress, [])
-        .txOutReferenceScript(singletonContract.code, singletonContract.version)
+				.txOutReferenceScript(singletonContract.code, singletonContract.version)
 				.changeAddress(await this.wallet.getChangeAddress());
 
 			// All inputs to the transaction will count as collateral utxos.
