@@ -124,7 +124,13 @@ describe("Creating an EventFactory", async () => {
 	it("Should build a recreation event tx", async () => {
 		const utxos = await eventFactory.wallet.getCollateral();
 		const newReference = [fromUTF8("Test Reference")];
-		const unsignedTx = await eventFactory.recreate(addr, utxos, sharedEvents, newReference);
+		const unsignedTx = await eventFactory.recreate(
+			addr,
+			utxos,
+			sharedEvents,
+			newReference,
+			new Map(),
+		);
 		expect(unsignedTx).toBeDefined();
 		expectTypeOf(unsignedTx).toEqualTypeOf<string>();
 	});
@@ -132,7 +138,13 @@ describe("Creating an EventFactory", async () => {
 	it("Should sign a recreation event tx", async () => {
 		const utxos = await eventFactory.wallet.getCollateral();
 		const newReference = [fromUTF8("Test Reference")];
-		const unsignedTx = await eventFactory.recreate(addr, utxos, sharedEvents, newReference);
+		const unsignedTx = await eventFactory.recreate(
+			addr,
+			utxos,
+			sharedEvents,
+			newReference,
+			new Map(),
+		);
 		const signedTx = await eventFactory.signTx(unsignedTx);
 		expect(signedTx).toBeDefined();
 		expectTypeOf(signedTx).toEqualTypeOf<string>();
