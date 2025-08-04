@@ -259,7 +259,7 @@ export class EventFactory {
 		walletUtxos: UTxO[],
 		events: UTxO[],
 		newDataReferences: string[],
-		utxoRef: { txHash: string; outputIndex: number } | undefined,
+		utxoRefMap: Map<string, { txHash: string; outputIndex: number }>,
 	): Promise<string> {
 		// We create a transaction builder to build our recreate transaction.
 		const txBuilder = new MeshTxBuilder({
@@ -321,6 +321,13 @@ export class EventFactory {
 					.requiredSignerHash(getAddressPublicKeyHash(signerAddress))
 					.txOut(utxo.output.address, outAmount)
 					.txOutInlineDatumValue(newObjectDatum, "JSON");
+
+				if (utxoRefMap.has(asset.unit)) {
+					const utxoRef = utxoRefMap.get(asset.unit)!;
+					txBuilder.spendingTxInReference(utxoRef.txHash, utxoRef.outputIndex);
+				} else {
+					txBuilder.txInScript(this.objectEventContract.code);
+				}
 			} catch (error) {
 				throw error;
 			}
@@ -342,12 +349,6 @@ export class EventFactory {
 				.txOut(this.feeAddress, [{ unit: "lovelace", quantity: this.feeAmount.toString() }])
 				.changeAddress(this.wallet.getChangeAddress())
 				.selectUtxosFrom(walletUtxos);
-
-			if (utxoRef) {
-				txBuilder.spendingTxInReference(utxoRef.txHash, utxoRef.outputIndex);
-			} else {
-				txBuilder.txInScript(this.objectEventContract.code);
-			}
 
 			const unsignedTx = await txBuilder.complete();
 
