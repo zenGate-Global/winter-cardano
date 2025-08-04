@@ -175,7 +175,7 @@ export class EventFactory {
 					},
 				])
 				.txOutInlineDatumValue(objectDatum, "JSON")
-				.changeAddress(this.wallet.getChangeAddress());
+				.changeAddress(await this.wallet.getChangeAddress());
 
 			// All inputs to the transaction will count as collateral utxos.
 			utxos.forEach((u) =>
@@ -230,9 +230,9 @@ export class EventFactory {
 
 			txBuilder
 				.selectUtxosFrom(utxos)
-				.txOutReferenceScript(singletonContract.code, singletonContract.version)
 				.txOut(deploymentAddress, [])
-				.changeAddress(this.wallet.getChangeAddress());
+        .txOutReferenceScript(singletonContract.code, singletonContract.version)
+				.changeAddress(await this.wallet.getChangeAddress());
 
 			// All inputs to the transaction will count as collateral utxos.
 			utxos.forEach((u) =>
@@ -347,7 +347,7 @@ export class EventFactory {
 			// Add the WINTER fee as an output.
 			txBuilder
 				.txOut(this.feeAddress, [{ unit: "lovelace", quantity: this.feeAmount.toString() }])
-				.changeAddress(this.wallet.getChangeAddress())
+				.changeAddress(await this.wallet.getChangeAddress())
 				.selectUtxosFrom(walletUtxos);
 
 			const unsignedTx = await txBuilder.complete();
@@ -436,7 +436,7 @@ export class EventFactory {
 			// Add the WINTER fee as an output.
 			txBuilder
 				.txOut(this.feeAddress, [{ unit: "lovelace", quantity: this.feeAmount.toString() }])
-				.changeAddress(this.wallet.getChangeAddress())
+				.changeAddress(await this.wallet.getChangeAddress())
 				.selectUtxosFrom(walletUtxos)
 				.requiredSignerHash(getAddressPublicKeyHash(signerAddress));
 
@@ -483,12 +483,12 @@ export class EventFactory {
 		return await this.wallet.getUtxos();
 	}
 
-	public getWalletAddress(): string {
+	public getWalletAddress(): Promise<string> {
 		return this.wallet.getChangeAddress();
 	}
 
-	public getAddressPkHash(): string {
-		return getAddressPublicKeyHash(this.wallet.getChangeAddress());
+	public async getAddressPkHash(): Promise<string> {
+		return getAddressPublicKeyHash(await this.wallet.getChangeAddress());
 	}
 
 	public async getUtxosByOutRef(
