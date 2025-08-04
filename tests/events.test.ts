@@ -162,14 +162,14 @@ describe("Creating an EventFactory", async () => {
 
 	it("Should build a spend event tx", async () => {
 		const utxos = await eventFactory.wallet.getCollateral();
-		const unsignedTx = await eventFactory.spend(addr, addr, utxos, sharedEvents);
+		const unsignedTx = await eventFactory.spend(addr, addr, utxos, sharedEvents, new Map());
 		expect(unsignedTx).toBeDefined();
 		expectTypeOf(unsignedTx).toEqualTypeOf<string>();
 	});
 
 	it("Should sign a spend event tx", async () => {
 		const utxos = await eventFactory.wallet.getCollateral();
-		const unsignedTx = await eventFactory.spend(addr, addr, utxos, sharedEvents);
+		const unsignedTx = await eventFactory.spend(addr, addr, utxos, sharedEvents, new Map());
 		const signedTx = await eventFactory.signTx(unsignedTx);
 		expect(signedTx).toBeDefined();
 		expectTypeOf(signedTx).toEqualTypeOf<string>();

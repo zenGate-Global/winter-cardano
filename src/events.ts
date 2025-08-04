@@ -20,20 +20,18 @@ import {
 
 import type {
 	Asset,
-	ByteString,
 	IEvaluator,
 	IFetcher,
 	ISubmitter,
 	Network,
 	PlutusData,
 	PlutusScript,
-	TxOutRef,
 	UTxO,
 } from "@meshsdk/core";
 
 import { WINTER_FEE, WINTER_FEE_ADDRESS_MAINNET, WINTER_FEE_ADDRESS_TESTNET } from "./utils/fee";
 
-import type { ObjectDatum, ObjectDatumFields, ObjectDatumParameters } from "./types";
+import type { ObjectDatum, ObjectDatumFields, ObjectDatumParameters, UtxoRefMap } from "./types";
 
 import { VALIDATORS } from "./utils/plutus";
 
@@ -232,6 +230,8 @@ export class EventFactory {
 				.selectUtxosFrom(utxos)
 				.txOut(deploymentAddress, [])
 				.txOutReferenceScript(singletonContract.code, singletonContract.version)
+				.txOut(deploymentAddress, [])
+				.txOutReferenceScript(this.objectEventContract.code, this.objectEventContract.version)
 				.changeAddress(await this.wallet.getChangeAddress());
 
 			// All inputs to the transaction will count as collateral utxos.
@@ -259,7 +259,7 @@ export class EventFactory {
 		walletUtxos: UTxO[],
 		events: UTxO[],
 		newDataReferences: string[],
-		utxoRefMap: Map<string, { txHash: string; outputIndex: number }>,
+		utxoRefMap: UtxoRefMap,
 	): Promise<string> {
 		// We create a transaction builder to build our recreate transaction.
 		const txBuilder = new MeshTxBuilder({
@@ -314,6 +314,7 @@ export class EventFactory {
 				const outAmount: Asset[] = [asset];
 
 				txBuilder
+					.setNetwork("preprod")
 					.spendingPlutusScriptV2()
 					.txIn(utxo.input.txHash, utxo.input.outputIndex)
 					.txInInlineDatumPresent()
@@ -324,7 +325,10 @@ export class EventFactory {
 
 				if (utxoRefMap.has(asset.unit)) {
 					const utxoRef = utxoRefMap.get(asset.unit)!;
-					txBuilder.spendingTxInReference(utxoRef.txHash, utxoRef.outputIndex);
+					txBuilder.spendingTxInReference(
+						utxoRef.objectEventScriptRef.txHash,
+						utxoRef.objectEventScriptRef.outputIndex,
+					);
 				} else {
 					txBuilder.txInScript(this.objectEventContract.code);
 				}
@@ -365,6 +369,7 @@ export class EventFactory {
 		signerAddress: string,
 		walletUtxos: UTxO[],
 		events: UTxO[],
+		utxoRefMap: UtxoRefMap,
 	): Promise<string> {
 		// We create a transaction builder to build our spend transaction.
 		const txBuilder = new MeshTxBuilder({
@@ -406,17 +411,34 @@ export class EventFactory {
 					code: applyCborEncoding(scriptBytes),
 				};
 
+				const utxoRef = utxoRefMap.get(tokenId);
+
 				txBuilder
 					.spendingPlutusScriptV2()
 					.txIn(events[index]!.input.txHash, events[index]!.input.outputIndex) // TODO: Check this. validator input which contains token
 					.txInInlineDatumPresent()
-					.txInRedeemerValue(this.spendRedeemer, "JSON")
-					.txInScript(this.objectEventContract.code)
-					.mintPlutusScriptV2()
-					.mint("-1", policyId, tokenName)
-					.mintingScript(mintingScript.code)
-					.mintRedeemerValue(this.mintRedeemer, "JSON")
-					.txOut(recipientAddress, []);
+					.txInRedeemerValue(this.spendRedeemer, "JSON");
+
+				if (utxoRef) {
+					txBuilder.spendingTxInReference(
+						utxoRef.objectEventScriptRef.txHash,
+						utxoRef.objectEventScriptRef.outputIndex,
+					);
+				} else {
+					txBuilder.txInScript(this.objectEventContract.code);
+				}
+				txBuilder.mintPlutusScriptV2().mint("-1", policyId, tokenName);
+
+				if (utxoRef) {
+					txBuilder.spendingTxInReference(
+						utxoRef.singletonScriptRef.txHash,
+						utxoRef.singletonScriptRef.outputIndex,
+					);
+				} else {
+					txBuilder.mintingScript(mintingScript.code);
+				}
+
+				txBuilder.mintRedeemerValue(this.mintRedeemer, "JSON").txOut(recipientAddress, []);
 			} catch (error) {
 				throw error;
 			}
