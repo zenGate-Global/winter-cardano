@@ -49,7 +49,7 @@ test("Getting address public key hash should work", async () => {
 	const network = process.env.NETWORK as Network;
 	const mnemonic = MeshWallet.brew();
 	const wallet = getWallet(network, mnemonic, provider, provider);
-	const address = wallet.getChangeAddress();
+	const address = await wallet.getChangeAddress();
 	const pkHash = getAddressPublicKeyHash(address);
 	expect(pkHash).toBeDefined();
 	expectTypeOf(pkHash).toEqualTypeOf<string>();
