@@ -16,7 +16,7 @@ describe("Creating an EventFactory", async () => {
 	const mnemonic = process.env.MNEMONIC as string;
 
 	const eventFactory = new EventFactory(network, mnemonic, provider, provider, provider);
-	const addr = eventFactory.wallet.getChangeAddress();
+	const addr = await eventFactory.wallet.getChangeAddress();
 	const pkHash = deserializeAddress(addr).pubKeyHash;
 	const dataRef = fromUTF8("Test Data");
 	const previewTxHash = "88a5d805c7e4579d89ae1792b79660716318ef52c1d0e89b8529f81db279c12c";
@@ -57,14 +57,14 @@ describe("Creating an EventFactory", async () => {
 		expectTypeOf(utxos).toEqualTypeOf<UTxO[]>();
 	});
 
-	it("Should get the wallet addresses", () => {
-		const addr = eventFactory.getWalletAddress();
+	it("Should get the wallet addresses", async () => {
+		const addr = await eventFactory.getWalletAddress();
 		expect(addr).toBeDefined();
 		expectTypeOf(addr).toEqualTypeOf<string>();
 	});
 
-	it("Should get the wallet address public key hash", () => {
-		const addrHash = eventFactory.getAddressPkHash();
+	it("Should get the wallet address public key hash", async () => {
+		const addrHash = await eventFactory.getAddressPkHash();
 		expect(addrHash).toBeDefined();
 		expectTypeOf(addrHash).toEqualTypeOf<string>();
 	});
