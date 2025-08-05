@@ -4,8 +4,8 @@ export interface UtxoReference {
 }
 
 export interface UtxoScriptReferences {
-	singletonScriptRef: UtxoReference;
-	objectEventScriptRef: UtxoReference;
+	singletonScriptRef: UtxoReference | undefined;
+	objectEventScriptRef: UtxoReference | undefined;
 }
 
 export type UtxoRefMap = Map<string, UtxoScriptReferences>;

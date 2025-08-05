@@ -335,8 +335,9 @@ export class EventFactory {
 					.txOut(utxo.output.address, outAmount)
 					.txOutInlineDatumValue(newObjectDatum, "JSON");
 
-				if (utxoRefMap.has(asset.unit)) {
-					const utxoRef = utxoRefMap.get(asset.unit)!;
+				const utxoRef = utxoRefMap.get(asset.unit);
+
+				if (utxoRef && utxoRef.objectEventScriptRef) {
 					txBuilder.spendingTxInReference(
 						utxoRef.objectEventScriptRef.txHash,
 						utxoRef.objectEventScriptRef.outputIndex,
@@ -443,7 +444,7 @@ export class EventFactory {
 					.txInInlineDatumPresent()
 					.txInRedeemerValue(this.spendRedeemer, "JSON");
 
-				if (utxoRef) {
+				if (utxoRef && utxoRef.objectEventScriptRef) {
 					txBuilder.spendingTxInReference(
 						utxoRef.objectEventScriptRef.txHash,
 						utxoRef.objectEventScriptRef.outputIndex,
@@ -453,7 +454,7 @@ export class EventFactory {
 				}
 				txBuilder.mintPlutusScriptV2().mint("-1", policyId, tokenName);
 
-				if (utxoRef) {
+				if (utxoRef && utxoRef.singletonScriptRef) {
 					txBuilder.spendingTxInReference(
 						utxoRef.singletonScriptRef.txHash,
 						utxoRef.singletonScriptRef.outputIndex,
