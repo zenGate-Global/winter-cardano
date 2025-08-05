@@ -204,6 +204,7 @@ export class EventFactory {
 			outputIndex: number;
 		},
 		utxos: UTxO[],
+		deploySingleton = false,
 	): Promise<string> {
 		try {
 			const hexName = stringToHex(singletonName);
@@ -227,10 +228,15 @@ export class EventFactory {
 				verbose: true,
 			});
 
+			txBuilder.selectUtxosFrom(utxos);
+
+			if (deploySingleton) {
+				txBuilder
+					.txOut(deploymentAddress, [])
+					.txOutReferenceScript(singletonContract.code, singletonContract.version);
+			}
+
 			txBuilder
-				.selectUtxosFrom(utxos)
-				.txOut(deploymentAddress, [])
-				.txOutReferenceScript(singletonContract.code, singletonContract.version)
 				.txOut(deploymentAddress, [])
 				.txOutReferenceScript(this.objectEventContract.code, this.objectEventContract.version)
 				.changeAddress(await this.wallet.getChangeAddress());
