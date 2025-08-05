@@ -5,6 +5,7 @@ import {
 	applyParamsToScript,
 	byteString,
 	conStr0,
+	conStr1,
 	deserializeDatum,
 	integer,
 	list,
@@ -85,8 +86,8 @@ export class EventFactory {
 		// Store empty redeemers.
 		this.recreateRedeemer = conStr0([]);
 		this.mintRedeemer = conStr0([]);
-		this.spendRedeemer = conStr0([]);
-		this.burnRedeemer = conStr0([]);
+		this.spendRedeemer = conStr1([]) as PlutusData;
+		this.burnRedeemer = conStr1([]) as PlutusData;
 
 		// Apply parameters to the object event script.
 		// a. The first parameter is the payment credential of the Winter fee address.
