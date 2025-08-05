@@ -281,7 +281,10 @@ export class EventFactory {
 		//    and that the data reference is different.
 		// 2. Recreate ObjectDatum.
 		// 3. Add recreated event to transaction.
-		events.forEach(async (utxo, index) => {
+		const addedUtxos = new Set<string>();
+
+		for (let index = 0; index < events.length; index++) {
+			const utxo = events[index]!;
 			try {
 				if (!utxo.output.plutusData) {
 					throw new Error("No Plutus data in event utxo.");
@@ -340,10 +343,18 @@ export class EventFactory {
 				} else {
 					txBuilder.txInScript(this.objectEventContract.code);
 				}
+
+				addedUtxos.add(`${utxo.input.txHash}:${utxo.input.outputIndex}`);
 			} catch (error) {
 				throw error;
 			}
-		});
+		}
+
+		if (addedUtxos.size !== events.length) {
+			throw new Error(
+				`Not all event UTxOs were included as inputs. Expected: ${events.length}, Added: ${addedUtxos.size}`,
+			);
+		}
 
 		try {
 			// Use the wallet utxos as collateral for the transaction.
@@ -387,7 +398,10 @@ export class EventFactory {
 			verbose: true,
 		});
 
-		events.forEach(async (utxo, index) => {
+		const addedUtxos = new Set<string>();
+
+		for (let index = 0; index < events.length; index++) {
+			const utxo = events[index]!;
 			if (!utxo.output.plutusData) {
 				throw new Error("No Plutus datum in event utxo.");
 			}
@@ -424,7 +438,7 @@ export class EventFactory {
 
 				txBuilder
 					.spendingPlutusScriptV2()
-					.txIn(events[index]!.input.txHash, events[index]!.input.outputIndex) // TODO: Check this. validator input which contains token
+					.txIn(utxo.input.txHash, utxo.input.outputIndex) // TODO: Check this. validator input which contains token
 					.txInInlineDatumPresent()
 					.txInRedeemerValue(this.spendRedeemer, "JSON");
 
@@ -448,10 +462,18 @@ export class EventFactory {
 				}
 
 				txBuilder.mintRedeemerValue(this.mintRedeemer, "JSON").txOut(recipientAddress, []);
+
+				addedUtxos.add(`${utxo.input.txHash}:${utxo.input.outputIndex}`);
 			} catch (error) {
 				throw error;
 			}
-		});
+		}
+
+		if (addedUtxos.size !== events.length) {
+			throw new Error(
+				`Not all event UTxOs were included as inputs. Expected: ${events.length}, Added: ${addedUtxos.size}`,
+			);
+		}
 
 		try {
 			// Use the wallet utxos as collateral for the transaction.
