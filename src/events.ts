@@ -177,7 +177,8 @@ export class EventFactory {
 				.changeAddress(await this.wallet.getChangeAddress());
 
 			// All inputs to the transaction will count as collateral utxos.
-			utxos.forEach((u) =>
+			const collateralUtxos = this.getCollateralUTxOs(utxos);
+			collateralUtxos.forEach((u) =>
 				txBuilder.txInCollateral(
 					u.input.txHash,
 					u.input.outputIndex,
@@ -242,7 +243,8 @@ export class EventFactory {
 				.changeAddress(await this.wallet.getChangeAddress());
 
 			// All inputs to the transaction will count as collateral utxos.
-			utxos.forEach((u) =>
+			const collateralUtxos = this.getCollateralUTxOs(utxos);
+			collateralUtxos.forEach((u) =>
 				txBuilder.txInCollateral(
 					u.input.txHash,
 					u.input.outputIndex,
@@ -345,7 +347,8 @@ export class EventFactory {
 
 		try {
 			// Use the wallet utxos as collateral for the transaction.
-			walletUtxos.forEach((u) =>
+			const collateralUtxos = this.getCollateralUTxOs(walletUtxos);
+			collateralUtxos.forEach((u) =>
 				txBuilder.txInCollateral(
 					u.input.txHash,
 					u.input.outputIndex,
@@ -452,7 +455,8 @@ export class EventFactory {
 
 		try {
 			// Use the wallet utxos as collateral for the transaction.
-			walletUtxos.forEach((u) =>
+			const collateralUtxos = this.getCollateralUTxOs(walletUtxos);
+			collateralUtxos.forEach((u) =>
 				txBuilder.txInCollateral(
 					u.input.txHash,
 					u.input.outputIndex,
@@ -546,6 +550,40 @@ export class EventFactory {
 
 	public async submitTx(tx: string): Promise<string> {
 		return await this.wallet.submitTx(tx);
+	}
+
+	public getCollateralUTxOs(
+		utxos: UTxO[],
+		requiredLovelaceAmount: bigint = BigInt(5_000_000),
+	): UTxO[] {
+		const pureAdaUtxos = utxos.filter((utxo) => {
+			return utxo.output.amount.filter((a) => a.unit !== "lovelace").length === 0;
+		});
+
+		// sort utxos by their lovelace amount in descending order
+		pureAdaUtxos.sort((a, b) => {
+			return (
+				Number(b.output.amount.find((asset) => asset.unit === "lovelace")!.quantity) -
+				Number(a.output.amount.find((asset) => asset.unit === "lovelace")!.quantity)
+			);
+		});
+
+		let totalLovelace = BigInt(0);
+		const selectedUtxos = [];
+
+		for (const utxo of pureAdaUtxos) {
+			const lovelaceAmount = BigInt(
+				utxo.output.amount.find((asset) => asset.unit === "lovelace")!.quantity,
+			);
+			totalLovelace += lovelaceAmount;
+			selectedUtxos.push(utxo);
+
+			if (totalLovelace >= requiredLovelaceAmount) {
+				break;
+			}
+		}
+
+		return selectedUtxos;
 	}
 
 	private validateInputs(network: string): void {
