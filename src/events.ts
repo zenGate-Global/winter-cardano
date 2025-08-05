@@ -462,7 +462,7 @@ export class EventFactory {
 					txBuilder.mintingScript(mintingScript.code);
 				}
 
-				txBuilder.mintRedeemerValue(this.mintRedeemer, "JSON").txOut(recipientAddress, []);
+				txBuilder.mintRedeemerValue(this.burnRedeemer, "JSON");
 
 				addedUtxos.add(`${utxo.input.txHash}:${utxo.input.outputIndex}`);
 			} catch (error) {
