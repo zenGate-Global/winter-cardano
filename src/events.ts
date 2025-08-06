@@ -163,7 +163,13 @@ export class EventFactory {
 
 			// The singleton script does not require any redeemer.
 			txBuilder
-				.selectUtxosFrom(utxos)
+				.selectUtxosFrom(utxos.slice(1))
+				.txIn(
+					utxos[0]!.input.txHash,
+					utxos[0]!.input.outputIndex,
+					utxos[0]!.output.amount,
+					utxos[0]!.output.address,
+				)
 				.mintPlutusScriptV2()
 				.mint("1", policyId, hexName)
 				.mintingScript(singletonContract.code)
