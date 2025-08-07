@@ -169,6 +169,7 @@ export class EventFactory {
 					utxos[0]!.input.outputIndex,
 					utxos[0]!.output.amount,
 					utxos[0]!.output.address,
+					utxos[0]!.output.scriptRef ? utxos[0]!.output.scriptRef.length / 2 : 0,
 				)
 				.mintPlutusScriptV2()
 				.mint("1", policyId, hexName)
@@ -446,7 +447,14 @@ export class EventFactory {
 
 				txBuilder
 					.spendingPlutusScriptV2()
-					.txIn(utxo.input.txHash, utxo.input.outputIndex) // TODO: Check this. validator input which contains token
+					.txIn(
+						utxo.input.txHash,
+						utxo.input.outputIndex,
+						utxo.output.amount,
+						utxo.output.address,
+						utxo.output.scriptRef ? utxo.output.scriptRef.length / 2 : 0,
+					) // TODO: Check this. validator input which contains token
+
 					.txInInlineDatumPresent()
 					.txInRedeemerValue(this.spendRedeemer, "JSON");
 
