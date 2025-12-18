@@ -1,0 +1,99 @@
+---
+title: Reference Scripts
+description: "Deploy and use reference scripts for transaction optimization"
+order: 3
+---
+
+Reference scripts allow you to deploy scripts on-chain once and reference them in future transactions. This reduces transaction size and fees.
+
+## Deploying Reference Scripts
+
+Use `deployReference()` to deploy the singleton and object event scripts to an address you control.
+
+```typescript
+const deploymentAddress = await eventFactory.getWalletAddress();
+const walletUtxos = await eventFactory.getWalletUtxos();
+
+const utxoRef = {
+    txHash: walletUtxos[0].input.txHash,
+    outputIndex: walletUtxos[0].input.outputIndex
+};
+
+const unsignedTx = await eventFactory.deployReference(
+    deploymentAddress,
+    'myToken',            // singleton name
+    utxoRef,              // utxo reference for parameterization
+    walletUtxos,
+    true                  // deploySingleton: deploy both scripts
+);
+const signedTx = await eventFactory.signTx(unsignedTx);
+const txHash = await eventFactory.submitTx(signedTx);
+```
+
+## Parameters
+
+<TypeTable
+  data={[
+    {
+      name: "deploymentAddress",
+      type: "string",
+      description: "Address where the reference scripts will be stored.",
+      required: true,
+    },
+    {
+      name: "singletonName",
+      type: "string",
+      description: "Name of the singleton token. Must match the name used in mintSingleton().",
+      required: true,
+    },
+    {
+      name: "utxoRef",
+      type: "{ txHash: string, outputIndex: number }",
+      description: "UTxO reference used for parameterizing the singleton script.",
+      required: true,
+    },
+    {
+      name: "utxos",
+      type: "UTxO[]",
+      description: "Wallet UTxOs for transaction building.",
+      required: true,
+    },
+    {
+      name: "deploySingleton",
+      type: "boolean",
+      description: "If true, deploys both singleton and object event scripts. If false, only deploys the object event script.",
+      defaultValue: "true",
+    },
+  ]}
+/>
+
+## Using Reference Scripts
+
+After deployment, create a `utxoRefMap` to use in `recreate()` and `spend()`:
+
+```typescript
+const tokenId = '<policyId><tokenName>';
+
+const utxoRefMap = new Map([
+    [tokenId, {
+        singletonScriptRef: {
+            txHash: '<deployTxHash>',
+            outputIndex: 0
+        },
+        objectEventScriptRef: {
+            txHash: '<deployTxHash>',
+            outputIndex: 1
+        }
+    }]
+]);
+
+const unsignedTx = await eventFactory.recreate(
+    signerAddress,
+    walletUtxos,
+    events,
+    newDataReferences,
+    utxoRefMap
+);
+```
+
+When the `utxoRefMap` contains entries for your tokens, the library will reference the on-chain scripts instead of including the full script in the transaction.
