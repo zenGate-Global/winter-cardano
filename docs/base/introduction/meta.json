@@ -1,8 +1,8 @@
 [
-  {
-    "type": "category",
-    "icon": "home",
-    "parent": [],
-    "order": 0
-  }
+	{
+		"type": "category",
+		"icon": "home",
+		"parent": [],
+		"order": 0
+	}
 ]

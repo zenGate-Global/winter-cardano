@@ -1,8 +1,8 @@
 [
-  {
-    "type": "link",
-    "icon": "file",
-    "parent": [],
-    "order": 0
-  }
+	{
+		"type": "link",
+		"icon": "file",
+		"parent": [],
+		"order": 0
+	}
 ]
