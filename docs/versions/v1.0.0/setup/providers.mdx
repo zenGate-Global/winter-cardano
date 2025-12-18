@@ -1,0 +1,106 @@
+---
+title: Providers
+description: "Initializing and setup providers for Winter Cardano SDK"
+order: 1
+---
+
+Have your seed phrase prepared with a few ADA inside and your provider ready.
+
+## EventFactory Initialization
+
+The EventFactory constructor takes your network, mnemonic, and provider interfaces from MeshSDK.
+
+```typescript
+import { EventFactory } from '@anthropic/winter-cardano';
+import { BlockfrostProvider } from '@meshsdk/core';
+
+const provider = new BlockfrostProvider('<projectId>');
+
+const eventFactory = new EventFactory(
+    'preprod',                    // network: 'mainnet' | 'testnet' | 'preview' | 'preprod'
+    '<seedPhrase>',               // mnemonic: string or string[]
+    provider,                     // fetcher: IFetcher
+    provider,                     // submitter: ISubmitter
+);
+```
+
+<Alert variant="info">Network names are case-insensitive.</Alert>
+
+## Provider Examples
+
+<CodeTab defaultValue="blockfrost">
+  <CodeTabList items={[
+    { value: "blockfrost", title: "Blockfrost" },
+    { value: "koios", title: "Koios" },
+    { value: "maestro", title: "Maestro" }
+  ]} />
+  <CodeTabContent value="blockfrost" language="typescript" code={`import { BlockfrostProvider } from '@meshsdk/core';
+
+const provider = new BlockfrostProvider('<projectId>');
+
+const eventFactory = new EventFactory(
+    'preprod',
+    '<seedPhrase>',
+    provider,
+    provider,
+);`} />
+  <CodeTabContent value="koios" language="typescript" code={`import { KoiosProvider } from '@meshsdk/core';
+
+const provider = new KoiosProvider('preprod');
+
+const eventFactory = new EventFactory(
+    'preprod',
+    '<seedPhrase>',
+    provider,
+    provider,
+);`} />
+  <CodeTabContent value="maestro" language="typescript" code={`import { MaestroProvider } from '@meshsdk/core';
+
+const provider = new MaestroProvider({
+    network: 'Preprod',
+    apiKey: '<Your-API-Key>',
+    turboSubmit: false
+});
+
+const eventFactory = new EventFactory(
+    'preprod',
+    '<seedPhrase>',
+    provider,
+    provider,
+);`} />
+</CodeTab>
+
+## With Evaluator
+
+<Alert variant="info">For better transaction cost estimation, you can pass an optional evaluator.</Alert>
+
+```typescript
+const eventFactory = new EventFactory(
+    'preprod',
+    '<seedPhrase>',
+    provider,           // fetcher
+    provider,           // submitter
+    provider,           // evaluator (optional)
+);
+```
+
+## Custom Provider
+
+Your custom provider must implement `IFetcher` and `ISubmitter` interfaces from MeshSDK.
+
+```typescript
+import type { IFetcher, ISubmitter } from '@meshsdk/core';
+
+class MyProvider implements IFetcher, ISubmitter {
+    // implement required methods
+}
+
+const provider = new MyProvider();
+
+const eventFactory = new EventFactory(
+    'preprod',
+    '<seedPhrase>',
+    provider,
+    provider,
+);
+```

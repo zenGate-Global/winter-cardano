@@ -1,0 +1,84 @@
+---
+title: Recreation
+description: Learn about the recreating in Winter Cardano SDK.
+order: 1
+---
+
+This allows data and singleton to be transferred to a new utxo.
+
+<Alert variant="info">A fee of 1 ADA is paid to winter protocol. It is paid once per transaction no matter the input count.</Alert>
+
+## UTXO Selection
+
+It is up to the user to have their inputs selected, however, this library does contain some helper methods.
+
+An exact utxo can be selected as such:
+
+```typescript
+const events = await eventFactory.getUtxosByOutRef([
+    {
+        txHash: '<txHash>',
+        outputIndex: 0
+    }
+]);
+```
+
+A series of utxos from the same contract address can be selected, all with different singletons and datums. The only requirement is that they all share intersecting signers.
+
+The library will automatically ensure proper datum recreation, lovelace transfer, and singleton transfer.
+
+## Transaction Building
+
+Since recreation is only done to correct the data reference, a new value must be passed into the function. As recreate takes in an array of utxos, the newDataReferences must also be an array of hex strings, each corresponding to the utxo at the same index.
+
+```typescript
+const signerAddress = await eventFactory.getWalletAddress();
+const walletUtxos = await eventFactory.getWalletUtxos();
+const newDataReferences = ['deadbeef'];
+
+const unsignedTx = await eventFactory.recreate(
+    signerAddress,
+    walletUtxos,
+    events,
+    newDataReferences,
+    new Map()  // utxoRefMap - empty if not using reference scripts
+);
+const signedTx = await eventFactory.signTx(unsignedTx);
+const txHash = await eventFactory.submitTx(signedTx);
+```
+
+## Parameters
+
+<TypeTable
+  data={[
+    {
+      name: "signerAddress",
+      type: "string",
+      description: "Address of the authorized signer performing the recreation.",
+      required: true,
+    },
+    {
+      name: "walletUtxos",
+      type: "UTxO[]",
+      description: "UTxOs from the wallet used for fees and collateral.",
+      required: true,
+    },
+    {
+      name: "events",
+      type: "UTxO[]",
+      description: "Array of event UTxOs to recreate.",
+      required: true,
+    },
+    {
+      name: "newDataReferences",
+      type: "string[]",
+      description: "Array of hex strings with new data references. Must match the length of events array.",
+      required: true,
+    },
+    {
+      name: "utxoRefMap",
+      type: "Map",
+      description: "Optional Map for reference script optimization. Pass an empty new Map() if not using reference scripts. See Reference Scripts for details.",
+    },
+  ]}
+/>

@@ -1,0 +1,45 @@
+---
+title: Minting Event
+description: Learn about the minting event in Winter Cardano SDK.
+order: 0
+---
+
+A token known as a singleton must be minted to the contract to easily identify the proper utxo. It is known as a singleton since only one of them will be in existence just as an NFT.
+
+<Alert variant="warning">Continue only if the entire instantiation step is complete. It is important that your smart contract parameters are correctly set.</Alert>
+
+## Transaction Building
+
+```typescript
+const name = 'testSingletonTracker';
+const walletUtxos = await eventFactory.getWalletUtxos();
+
+const unsignedTx = await eventFactory.mintSingleton(name, walletUtxos, objectDatum);
+const signedTx = await eventFactory.signTx(unsignedTx);
+const txHash = await eventFactory.submitTx(signedTx);
+```
+
+## Parameters
+
+<TypeTable
+  data={[
+    {
+      name: "name",
+      type: "string",
+      description: "The name of your singleton token. This will be used to identify your event UTXO.",
+      required: true,
+    },
+    {
+      name: "walletUtxos",
+      type: "UTxO[]",
+      description: "Array of UTxOs from your wallet. The first UTxO is used for the one-shot minting policy.",
+      required: true,
+    },
+    {
+      name: "objectDatum",
+      type: "ObjectDatum",
+      description: "The ObjectDatum created using EventFactory.getObjectDatumFromParams(). See Setup Contract for details.",
+      required: true,
+    },
+  ]}
+/>

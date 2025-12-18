@@ -1,0 +1,59 @@
+---
+title: Setup Contract
+description: "Setup your Contract for Winter Cardano SDK"
+order: 2
+---
+
+Here you set your immutable data for your commodity using ObjectDatum.
+
+```typescript
+const walletAddress = await eventFactory.getWalletAddress();
+const walletAddressPkHash = await eventFactory.getAddressPkHash();
+
+const objectDatum = EventFactory.getObjectDatumFromParams({
+    protocolVersion: 1,
+    dataReferenceHex: 'deadbeef',
+    eventCreationInfoTxHash: '',
+    signersPkHash: [walletAddressPkHash]
+});
+```
+
+## Parameters
+
+<TypeTable
+  data={[
+    {
+      name: "protocolVersion",
+      type: "number",
+      description: "This denotes which version of the respective protocol is being used. Must be an integer.",
+      required: true,
+    },
+    {
+      name: "dataReferenceHex",
+      type: "string",
+      description: "This can be any arbitrary data. Perhaps an IPFS link. Data must be in the form of a hex string.",
+      required: true,
+    },
+    {
+      name: "eventCreationInfoTxHash",
+      type: "string",
+      description: "This must be the original txId during the creation of the contract. Since there is no way to determine it before transaction is built, it should be an empty string. It will be set automatically on mint.",
+      required: true,
+    },
+    {
+      name: "signersPkHash",
+      type: "string[]",
+      description: "This represents all authorized signers who can interact with the contract. It is an array of strings. The strings must be the address payment credential hash of the respective signer.",
+      required: true,
+    },
+  ]}
+/>
+
+## Usage
+
+The objectDatum is passed directly to `mintSingleton()`:
+
+```typescript
+const walletUtxos = await eventFactory.getWalletUtxos();
+const unsignedTx = await eventFactory.mintSingleton('myToken', walletUtxos, objectDatum);
+```
