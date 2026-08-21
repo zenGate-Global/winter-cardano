@@ -19,7 +19,7 @@ describe("Creating an EventFactory", async () => {
 	const addr = await eventFactory.wallet.getChangeAddress();
 	const pkHash = deserializeAddress(addr).pubKeyHash;
 	const dataRef = fromUTF8("Test Data");
-	const previewTxHash = "88a5d805c7e4579d89ae1792b79660716318ef52c1d0e89b8529f81db279c12c";
+	const previewTxHash = "073aac1259a6633629e5de923b16d82e652b88ac7925ab20a11ec053a56b01cc";
 	const pVersion = 1;
 
 	const objectDatumParams: ObjectDatumParameters = {
@@ -30,6 +30,7 @@ describe("Creating an EventFactory", async () => {
 	};
 
 	const sharedEvents: UTxO[] = await eventFactory.getUtxosByOutRef([
+		{ txHash: previewTxHash, outputIndex: 1 },
 		{ txHash: previewTxHash, outputIndex: 0 },
 	]);
 
@@ -123,7 +124,7 @@ describe("Creating an EventFactory", async () => {
 
 	it("Should build a recreation event tx", async () => {
 		const utxos = await eventFactory.wallet.getCollateral();
-		const newReference = [fromUTF8("Test Reference")];
+		const newReference = [fromUTF8("Test Reference 1"), fromUTF8("Test Reference 2")];
 		const unsignedTx = await eventFactory.recreate(
 			addr,
 			utxos,
@@ -137,7 +138,7 @@ describe("Creating an EventFactory", async () => {
 
 	it("Should sign a recreation event tx", async () => {
 		const utxos = await eventFactory.wallet.getCollateral();
-		const newReference = [fromUTF8("Test Reference")];
+		const newReference = [fromUTF8("Test Reference 1"), fromUTF8("Test Reference 2")];
 		const unsignedTx = await eventFactory.recreate(
 			addr,
 			utxos,
@@ -162,14 +163,14 @@ describe("Creating an EventFactory", async () => {
 
 	it("Should build a spend event tx", async () => {
 		const utxos = await eventFactory.wallet.getCollateral();
-		const unsignedTx = await eventFactory.spend(addr, addr, utxos, sharedEvents, new Map());
+		const unsignedTx = await eventFactory.spend(addr, utxos, sharedEvents, new Map());
 		expect(unsignedTx).toBeDefined();
 		expectTypeOf(unsignedTx).toEqualTypeOf<string>();
 	});
 
 	it("Should sign a spend event tx", async () => {
 		const utxos = await eventFactory.wallet.getCollateral();
-		const unsignedTx = await eventFactory.spend(addr, addr, utxos, sharedEvents, new Map());
+		const unsignedTx = await eventFactory.spend(addr, utxos, sharedEvents, new Map());
 		const signedTx = await eventFactory.signTx(unsignedTx);
 		expect(signedTx).toBeDefined();
 		expectTypeOf(signedTx).toEqualTypeOf<string>();

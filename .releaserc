@@ -7,7 +7,7 @@
 		"next-major",
 		{ "name": "beta", "prerelease": true },
 		{ "name": "alpha", "prerelease": true },
-		{ "name": "mesh", "prerelease": false }
+		{ "name": "mesh", "channel": false, "prerelease": false }
 	],
 	"plugins": [
 		[
