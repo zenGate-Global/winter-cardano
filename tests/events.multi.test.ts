@@ -4,7 +4,12 @@ import { describe, expect, it } from "vitest";
 import { EventFactory } from "../src/events";
 
 const EVENT_TX_HASH = "073aac1259a6633629e5de923b16d82e652b88ac7925ab20a11ec053a56b01cc";
-const TEST_WALLET_KEY_HASH = "efd0266310ab9f3db1a2436a86d71fd7a4a068cd1a1344d72e64e2ef";
+const EVENT_REFS = [
+	{ txHash: EVENT_TX_HASH, outputIndex: 1 },
+	{ txHash: EVENT_TX_HASH, outputIndex: 0 },
+];
+const EVALUATION_SKIP_REASON =
+	"fixture is controlled by a different wallet; set MNEMONIC to the wallet that owns the fixture, or mint a fresh fixture and update EVENT_REFS";
 
 function requiredSignersFromRawCbor(unsignedTx: string): string[] {
 	const transaction = Cbor.parse(unsignedTx);
@@ -36,28 +41,38 @@ describe("multi-event transaction regressions", async () => {
 		provider,
 		provider,
 	);
+	const serializationFactory = new EventFactory(
+		process.env.NETWORK as string,
+		process.env.MNEMONIC as string,
+		provider,
+		provider,
+	);
 	const signerAddress = await eventFactory.wallet.getChangeAddress();
-	const eventRefs = [
-		{ txHash: EVENT_TX_HASH, outputIndex: 1 },
-		{ txHash: EVENT_TX_HASH, outputIndex: 0 },
-	];
-	const events = await eventFactory.getUtxosByOutRef(eventRefs);
+	const events = await eventFactory.getUtxosByOutRef(EVENT_REFS);
+	const walletSignerHash = await eventFactory.getAddressPkHash();
+	const walletControlsFixture = events.every(({ output }) =>
+		EventFactory.getObjectDatumFieldsFromPlutusCbor(output.plutusData!).signers_pk_hash.list.some(
+			({ bytes }) => bytes === walletSignerHash,
+		),
+	);
+	const evaluationIt = it.skipIf(!walletControlsFixture);
 
 	it("a two-event recreate encodes exactly one required signer", async () => {
-		const unsignedTx = await eventFactory.recreate(
+		// Keep evaluation out of this serialization regression. Execution-budget coverage belongs to the gated spend test.
+		const unsignedTx = await serializationFactory.recreate(
 			signerAddress,
-			await eventFactory.wallet.getCollateral(),
+			await serializationFactory.wallet.getCollateral(),
 			events,
 			[fromUTF8("Recreated data 1"), fromUTF8("Recreated data 2")],
 			new Map(),
 		);
+		const signerHash = await serializationFactory.getAddressPkHash();
 
-		expect(await eventFactory.getAddressPkHash()).toBe(TEST_WALLET_KEY_HASH);
-		expect(requiredSignersFromRawCbor(unsignedTx)).toEqual([TEST_WALLET_KEY_HASH]);
+		expect(requiredSignersFromRawCbor(unsignedTx)).toEqual([signerHash]);
 	});
 
 	it("getUtxosByOutRef preserves descending caller order", () => {
-		expect(events.map(({ input }) => input)).toEqual(eventRefs);
+		expect(events.map(({ input }) => input)).toEqual(EVENT_REFS);
 	});
 
 	it("getUtxosByOutRef rejects a missing output index", async () => {
@@ -91,23 +106,28 @@ describe("multi-event transaction regressions", async () => {
 		).rejects.toThrow("Data references cannot be empty.");
 	});
 
-	it("a two-event spend stays within the protocol execution-memory limit", async () => {
-		const unsignedTx = await eventFactory.spend(
-			signerAddress,
-			await eventFactory.wallet.getCollateral(),
-			events,
-			new Map(),
-		);
-		const redeemers =
-			core.Transaction.fromCbor(core.TxCBOR(unsignedTx)).witnessSet().redeemers()?.values() ?? [];
-		const exUnits = redeemers.map((redeemer) => ({
-			memory: redeemer.exUnits().mem(),
-			steps: redeemer.exUnits().steps(),
-		}));
-		const totalMemory = exUnits.reduce((total, { memory }) => total + memory, 0n);
+	evaluationIt(
+		walletControlsFixture
+			? "a two-event spend stays within the protocol execution-memory limit"
+			: `a two-event spend stays within the protocol execution-memory limit [skipped: ${EVALUATION_SKIP_REASON}]`,
+		async () => {
+			const unsignedTx = await eventFactory.spend(
+				signerAddress,
+				await eventFactory.wallet.getCollateral(),
+				events,
+				new Map(),
+			);
+			const redeemers =
+				core.Transaction.fromCbor(core.TxCBOR(unsignedTx)).witnessSet().redeemers()?.values() ?? [];
+			const exUnits = redeemers.map((redeemer) => ({
+				memory: redeemer.exUnits().mem(),
+				steps: redeemer.exUnits().steps(),
+			}));
+			const totalMemory = exUnits.reduce((total, { memory }) => total + memory, 0n);
 
-		console.info("two-event spend ex-units", exUnits);
-		expect(redeemers).toHaveLength(4);
-		expect(totalMemory).toBeLessThanOrEqual(14_000_000n);
-	});
+			console.info("two-event spend ex-units", exUnits);
+			expect(redeemers).toHaveLength(4);
+			expect(totalMemory).toBeLessThanOrEqual(14_000_000n);
+		},
+	);
 });
