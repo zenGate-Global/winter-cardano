@@ -32,14 +32,17 @@ try {
 		packages: "external",
 	});
 
-	if (ecmascript.success) {
-		console.log("ECMAScript build complete.");
-	}
-
-	if (commonjs.success) {
-		console.log("CommonJS build complete.");
+	for (const [label, result] of [
+		["ECMAScript", ecmascript],
+		["CommonJS", commonjs],
+	] as const) {
+		if (!result.success) {
+			console.error(`${label} build failed:`, result.logs);
+			process.exit(1);
+		}
+		console.log(`${label} build complete.`);
 	}
 } catch (e) {
-	const error = e as AggregateError;
-	console.error("Build Failed:", error);
+	console.error("Build Failed:", e);
+	process.exit(1);
 }
