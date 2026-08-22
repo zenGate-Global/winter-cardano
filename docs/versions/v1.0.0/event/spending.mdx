@@ -30,12 +30,10 @@ The library will automatically ensure proper lovelace transfer and singleton bur
 ## Transaction Building
 
 ```typescript
-const recipientAddress = await eventFactory.getWalletAddress();
 const signerAddress = await eventFactory.getWalletAddress();
 const walletUtxos = await eventFactory.getWalletUtxos();
 
 const unsignedTx = await eventFactory.spend(
-    recipientAddress,
     signerAddress,
     walletUtxos,
     events,
@@ -49,12 +47,6 @@ const txHash = await eventFactory.submitTx(signedTx);
 
 <TypeTable
   data={[
-    {
-      name: "recipientAddress",
-      type: "string",
-      description: "Address that will receive the remaining lovelace from the spent UTxO.",
-      required: true,
-    },
     {
       name: "signerAddress",
       type: "string",

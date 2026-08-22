@@ -127,6 +127,10 @@ export class EventFactory {
 		utxos: UTxO[],
 		objectDatum: ObjectDatum,
 	): Promise<string> {
+		if (utxos.length === 0) {
+			throw new Error("No UTxOs provided.");
+		}
+		EventFactory.validateObjectDatum(objectDatum);
 		try {
 			// Apply parameters to the singleton script.
 			// a. The first parameter is the token name of the singleton.
@@ -278,10 +282,25 @@ export class EventFactory {
 		newDataReferences: string[],
 		utxoRefMap: UtxoRefMap,
 	): Promise<string> {
+		if (walletUtxos.length === 0) {
+			throw new Error("No wallet UTxOs provided.");
+		}
+		if (events.length === 0) {
+			throw new Error("No event UTxOs provided.");
+		}
+		if (newDataReferences.length !== events.length) {
+			throw new Error(
+				`Data reference count does not match event count. Expected: ${events.length}, Received: ${newDataReferences.length}`,
+			);
+		}
+		if (newDataReferences.some((reference) => reference.length === 0)) {
+			throw new Error("Data references cannot be empty.");
+		}
 		// We create a transaction builder to build our recreate transaction.
 		const txBuilder = new MeshTxBuilder({
 			fetcher: this.fetcher,
 			submitter: this.submitter,
+			evaluator: this.evaluator,
 			verbose: true,
 		});
 
@@ -326,8 +345,8 @@ export class EventFactory {
 				// Make sure the event token is transferred to the new utxo.
 				const tokenFilter = utxo.output.amount.filter((t) => t.unit !== "lovelace");
 
-				if (!tokenFilter || tokenFilter.length == 0) {
-					throw new Error("No event token found.");
+				if (tokenFilter.length !== 1) {
+					throw new Error("Event UTxO must contain exactly one event token.");
 				}
 				const asset = tokenFilter.at(0)!;
 
@@ -338,7 +357,6 @@ export class EventFactory {
 					.txIn(utxo.input.txHash, utxo.input.outputIndex)
 					.txInInlineDatumPresent()
 					.txInRedeemerValue(this.recreateRedeemer, "JSON")
-					.requiredSignerHash(getAddressPublicKeyHash(signerAddress))
 					.txOut(utxo.output.address, outAmount)
 					.txOutInlineDatumValue(newObjectDatum, "JSON");
 
@@ -348,6 +366,7 @@ export class EventFactory {
 					txBuilder.spendingTxInReference(
 						utxoRef.objectEventScriptRef.txHash,
 						utxoRef.objectEventScriptRef.outputIndex,
+						(this.objectEventContract.code.length / 2).toString(),
 					);
 				} else {
 					txBuilder.txInScript(this.objectEventContract.code);
@@ -381,7 +400,8 @@ export class EventFactory {
 			txBuilder
 				.txOut(this.feeAddress, [{ unit: "lovelace", quantity: this.feeAmount.toString() }])
 				.changeAddress(await this.wallet.getChangeAddress())
-				.selectUtxosFrom(walletUtxos);
+				.selectUtxosFrom(walletUtxos)
+				.requiredSignerHash(getAddressPublicKeyHash(signerAddress));
 
 			const unsignedTx = await txBuilder.complete();
 
@@ -394,16 +414,22 @@ export class EventFactory {
 	}
 
 	public async spend(
-		recipientAddress: string, // This should be the WINTER fee address in the future.
 		signerAddress: string,
 		walletUtxos: UTxO[],
 		events: UTxO[],
 		utxoRefMap: UtxoRefMap,
 	): Promise<string> {
+		if (walletUtxos.length === 0) {
+			throw new Error("No wallet UTxOs provided.");
+		}
+		if (events.length === 0) {
+			throw new Error("No event UTxOs provided.");
+		}
 		// We create a transaction builder to build our spend transaction.
 		const txBuilder = new MeshTxBuilder({
 			fetcher: this.fetcher,
 			submitter: this.submitter,
+			evaluator: this.evaluator,
 			verbose: true,
 		});
 
@@ -424,8 +450,8 @@ export class EventFactory {
 			try {
 				const tokenFilter = utxo.output.amount.filter((t) => t.unit !== "lovelace");
 
-				if (!tokenFilter || tokenFilter.length == 0) {
-					throw new Error("No event token found.");
+				if (tokenFilter.length !== 1) {
+					throw new Error("Event UTxO must contain exactly one event token.");
 				}
 
 				const tokenId = tokenFilter.at(0)!.unit;
@@ -462,6 +488,7 @@ export class EventFactory {
 					txBuilder.spendingTxInReference(
 						utxoRef.objectEventScriptRef.txHash,
 						utxoRef.objectEventScriptRef.outputIndex,
+						(this.objectEventContract.code.length / 2).toString(),
 					);
 				} else {
 					txBuilder.txInScript(this.objectEventContract.code);
@@ -469,9 +496,10 @@ export class EventFactory {
 				txBuilder.mintPlutusScriptV2().mint("-1", policyId, tokenName);
 
 				if (utxoRef && utxoRef.singletonScriptRef) {
-					txBuilder.spendingTxInReference(
+					txBuilder.mintTxInReference(
 						utxoRef.singletonScriptRef.txHash,
 						utxoRef.singletonScriptRef.outputIndex,
+						(mintingScript.code.length / 2).toString(),
 					);
 				} else {
 					txBuilder.mintingScript(mintingScript.code);
@@ -521,12 +549,70 @@ export class EventFactory {
 	}
 
 	public async getScriptInfo(scriptHash: string): Promise<string> {
-		const url = `https://cardano-${this.network}.blockfrost.io/api/v0/scripts/${scriptHash}/cbor`;
-		const response = await this.fetcher.get(url);
+		const response = await this.fetcher.get(`scripts/${scriptHash}/cbor`);
 		return response.cbor as string;
 	}
 
+	private static validateObjectDatumValues(
+		protocolVersion: unknown,
+		dataReferenceHex: unknown,
+		eventCreationInfoTxHash: unknown,
+		signersPkHash: unknown,
+	): void {
+		if (
+			typeof protocolVersion !== "bigint" &&
+			(typeof protocolVersion !== "number" || !Number.isInteger(protocolVersion))
+		) {
+			throw new Error("Invalid protocol_version: expected an integer.");
+		}
+		if (typeof dataReferenceHex !== "string" || !/^(?:[0-9a-fA-F]{2})+$/.test(dataReferenceHex)) {
+			throw new Error("Invalid data_reference: expected non-empty hexadecimal bytes.");
+		}
+		if (
+			typeof eventCreationInfoTxHash !== "string" ||
+			(eventCreationInfoTxHash !== "" && !/^[0-9a-fA-F]{64}$/.test(eventCreationInfoTxHash))
+		) {
+			throw new Error(
+				"Invalid event_creation_info_tx_hash: expected empty bytes or a 32-byte hexadecimal hash.",
+			);
+		}
+		if (!Array.isArray(signersPkHash) || signersPkHash.length === 0) {
+			throw new Error("Invalid signers_pk_hash: expected at least one signer.");
+		}
+		if (
+			!signersPkHash.every(
+				(signer) => typeof signer === "string" && /^[0-9a-fA-F]{56}$/.test(signer),
+			)
+		) {
+			throw new Error("Invalid signers_pk_hash: each signer must be a 28-byte hexadecimal hash.");
+		}
+	}
+
+	private static validateObjectDatum(objectDatum: ObjectDatum): void {
+		if (
+			objectDatum?.constructor !== 0 ||
+			!Array.isArray(objectDatum.fields) ||
+			objectDatum.fields.length !== 4
+		) {
+			throw new Error("Invalid object datum: expected an ObjectDatum constructor.");
+		}
+		const [protocolVersion, dataReference, eventCreationInfo, signers] = objectDatum.fields;
+		const signerList = signers?.list;
+		EventFactory.validateObjectDatumValues(
+			protocolVersion?.int,
+			dataReference?.bytes,
+			eventCreationInfo?.bytes,
+			Array.isArray(signerList) ? signerList.map((signer) => signer?.bytes) : signerList,
+		);
+	}
+
 	public static getObjectDatumFromParams(params: ObjectDatumParameters): ObjectDatum {
+		EventFactory.validateObjectDatumValues(
+			params.protocolVersion,
+			params.dataReferenceHex,
+			params.eventCreationInfoTxHash,
+			params.signersPkHash,
+		);
 		return conStr0([
 			integer(params.protocolVersion),
 			byteString(params.dataReferenceHex),
@@ -564,22 +650,21 @@ export class EventFactory {
 	public async getUtxosByOutRef(
 		outRefs: { txHash: string; outputIndex: number }[],
 	): Promise<UTxO[]> {
-		const groupedOutRefs: { [txHash: string]: number[] } = {};
-		outRefs.forEach((ref) => {
-			if (groupedOutRefs[ref.txHash]) {
-				groupedOutRefs[ref.txHash]!.push(ref.outputIndex); // TODO: Check this.
-			} else {
-				groupedOutRefs[ref.txHash] = [ref.outputIndex];
+		const transactionHashes = [...new Set(outRefs.map((ref) => ref.txHash))];
+		const fetchedUtxos = await Promise.all(
+			transactionHashes.map((txHash) => this.fetcher.fetchUTxOs(txHash)),
+		);
+		const utxosByOutRef = new Map(
+			fetchedUtxos.flat().map((utxo) => [`${utxo.input.txHash}#${utxo.input.outputIndex}`, utxo]),
+		);
+		return outRefs.map((ref) => {
+			const key = `${ref.txHash}#${ref.outputIndex}`;
+			const utxo = utxosByOutRef.get(key);
+			if (!utxo) {
+				throw new Error(`UTxO not found: ${key}`);
 			}
+			return utxo;
 		});
-
-		const promises = Object.entries(groupedOutRefs).map(async ([txHash, outputIndexes]) => {
-			const utxos = await this.fetcher.fetchUTxOs(txHash);
-			return utxos.filter((utxo) => outputIndexes.includes(utxo.input.outputIndex));
-		});
-
-		const utxos = await Promise.all(promises);
-		return utxos.flat();
 	}
 
 	public async signTx(unsignedTx: string): Promise<string> {
@@ -597,30 +682,33 @@ export class EventFactory {
 		const pureAdaUtxos = utxos.filter((utxo) => {
 			return utxo.output.amount.filter((a) => a.unit !== "lovelace").length === 0;
 		});
-
-		// sort utxos by their lovelace amount in descending order
+		// Sort UTxOs by lovelace amount in descending order.
 		pureAdaUtxos.sort((a, b) => {
-			return (
-				Number(b.output.amount.find((asset) => asset.unit === "lovelace")!.quantity) -
-				Number(a.output.amount.find((asset) => asset.unit === "lovelace")!.quantity)
+			const aLovelace = BigInt(
+				a.output.amount.find((asset) => asset.unit === "lovelace")!.quantity,
 			);
+			const bLovelace = BigInt(
+				b.output.amount.find((asset) => asset.unit === "lovelace")!.quantity,
+			);
+			return aLovelace === bLovelace ? 0 : aLovelace > bLovelace ? -1 : 1;
 		});
-
 		let totalLovelace = BigInt(0);
-		const selectedUtxos = [];
-
-		for (const utxo of pureAdaUtxos) {
+		const selectedUtxos: UTxO[] = [];
+		for (const utxo of pureAdaUtxos.slice(0, 3)) {
 			const lovelaceAmount = BigInt(
 				utxo.output.amount.find((asset) => asset.unit === "lovelace")!.quantity,
 			);
 			totalLovelace += lovelaceAmount;
 			selectedUtxos.push(utxo);
-
 			if (totalLovelace >= requiredLovelaceAmount) {
 				break;
 			}
 		}
-
+		if (totalLovelace < requiredLovelaceAmount) {
+			throw new Error(
+				`Insufficient collateral: required ${requiredLovelaceAmount} lovelace, selected ${totalLovelace} lovelace from at most 3 inputs.`,
+			);
+		}
 		return selectedUtxos;
 	}
 
