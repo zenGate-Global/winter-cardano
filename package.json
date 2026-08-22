@@ -35,7 +35,7 @@
 		"@semantic-release/git": "^11.0.1",
 		"@types/bun": "latest",
 		"@types/lodash": "^4.17.16",
-		"bun-plugin-dts": "^0.3.0",
+		"bun-plugin-dts": "^0.4.0",
 		"conventional-changelog-conventionalcommits": "^8.0.0",
 		"dotenv": "^16.4.7",
 		"esbuild": "0.25.3",
