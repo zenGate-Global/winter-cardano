@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/zenGate-Global/winter-cardano/compare/v2.0.0...v2.0.1) (2026-08-22)
+
+### Bug Fixes
+
+* **ci:** let the release commit skip the git hooks ([#33](https://github.com/zenGate-Global/winter-cardano/issues/33)) ([f90b378](https://github.com/zenGate-Global/winter-cardano/commit/f90b37815c961f1fac6bc24ca0111772bd70c732))
+* publish the build output, and fail the build instead of exiting 0 ([#32](https://github.com/zenGate-Global/winter-cardano/issues/32)) ([07f0644](https://github.com/zenGate-Global/winter-cardano/commit/07f0644ed84823572ef297a00c0815322f0ca32c))
+
 ## [2.0.0](https://github.com/zenGate-Global/winter-cardano/compare/v1.6.0...v2.0.0) (2026-08-22)
 
 ### ⚠ BREAKING CHANGES
