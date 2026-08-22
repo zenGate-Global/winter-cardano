@@ -10,7 +10,7 @@
       "devDependencies": {
         "@biomejs/biome": "1.9.4",
         "@commitlint/cli": "^19.8.0",
-        "@commitlint/config-conventional": "^19.8.0",
+        "@commitlint/config-conventional": "^21.2.2",
         "@commitlint/prompt-cli": "^19.8.0",
         "@dcspark/cardano-multiplatform-lib-nodejs": "^3.1.1",
         "@semantic-release/changelog": "^7.0.0",
@@ -83,7 +83,7 @@
 
     "@commitlint/cli": ["@commitlint/cli@19.8.0", "", { "dependencies": { "@commitlint/format": "^19.8.0", "@commitlint/lint": "^19.8.0", "@commitlint/load": "^19.8.0", "@commitlint/read": "^19.8.0", "@commitlint/types": "^19.8.0", "tinyexec": "^0.3.0", "yargs": "^17.0.0" }, "bin": { "commitlint": "./cli.js" } }, "sha512-t/fCrLVu+Ru01h0DtlgHZXbHV2Y8gKocTR5elDOqIRUzQd0/6hpt2VIWOj9b3NDo7y4/gfxeR2zRtXq/qO6iUg=="],
 
-    "@commitlint/config-conventional": ["@commitlint/config-conventional@19.8.0", "", { "dependencies": { "@commitlint/types": "^19.8.0", "conventional-changelog-conventionalcommits": "^7.0.2" } }, "sha512-9I2kKJwcAPwMoAj38hwqFXG0CzS2Kj+SAByPUQ0SlHTfb7VUhYVmo7G2w2tBrqmOf7PFd6MpZ/a1GQJo8na8kw=="],
+    "@commitlint/config-conventional": ["@commitlint/config-conventional@21.2.2", "", { "dependencies": { "@commitlint/types": "^21.2.0", "conventional-changelog-conventionalcommits": "^10.0.0" } }, "sha512-NxA37SZviusFUEYOQZ5hNnZ1h7O/KiemPkxjOlpzKJNnWxThiwc6/SaZhaPa8fyLvfRBAywhQhJJk8XESHWlpQ=="],
 
     "@commitlint/config-validator": ["@commitlint/config-validator@19.8.0", "", { "dependencies": { "@commitlint/types": "^19.8.0", "ajv": "^8.11.0" } }, "sha512-+r5ZvD/0hQC3w5VOHJhGcCooiAVdynFlCe2d6I9dU+PvXdV3O+fU4vipVg+6hyLbQUuCH82mz3HnT/cBQTYYuA=="],
 
@@ -124,6 +124,8 @@
     "@connectrpc/connect-node": ["@connectrpc/connect-node@1.4.0", "", { "dependencies": { "undici": "^5.28.3" }, "peerDependencies": { "@bufbuild/protobuf": "^1.4.2", "@connectrpc/connect": "1.4.0" } }, "sha512-0ANnrr6SvsjevsWEgdzHy7BaHkluZyS6s4xNoVt7RBHFR5V/kT9lPokoIbYUOU9JHzdRgTaS3x5595mwUsu15g=="],
 
     "@connectrpc/connect-web": ["@connectrpc/connect-web@1.4.0", "", { "peerDependencies": { "@bufbuild/protobuf": "^1.4.2", "@connectrpc/connect": "1.4.0" } }, "sha512-13aO4psFbbm7rdOFGV0De2Za64DY/acMspgloDlcOKzLPPs0yZkhp1OOzAQeiAIr7BM/VOHIA3p8mF0inxCYTA=="],
+
+    "@conventional-changelog/template": ["@conventional-changelog/template@1.4.0", "", {}, "sha512-aalGyl7dbB5PArRebDIX43ZvBlXrYm9uWzGJ26t+4SzJVPsOuvfILGGbw5X4yX7i50YEmJ8zvbiWnqH/AAnZqg=="],
 
     "@dcspark/cardano-multiplatform-lib-nodejs": ["@dcspark/cardano-multiplatform-lib-nodejs@3.1.2", "", {}, "sha512-bfFI7ljC8El+yj4kG2G7GXcoHHhWJyJKonJ64H3Kcbns4+tHOTy525d1q/u4+hG+G42JPw4Zj5CFIBLv5GLMxg=="],
 
@@ -323,6 +325,8 @@
 
     "@semantic-release/release-notes-generator": ["@semantic-release/release-notes-generator@14.0.3", "", { "dependencies": { "conventional-changelog-angular": "^8.0.0", "conventional-changelog-writer": "^8.0.0", "conventional-commits-filter": "^5.0.0", "conventional-commits-parser": "^6.0.0", "debug": "^4.0.0", "get-stream": "^7.0.0", "import-from-esm": "^2.0.0", "into-stream": "^7.0.0", "lodash-es": "^4.17.21", "read-package-up": "^11.0.0" }, "peerDependencies": { "semantic-release": ">=20.1.0" } }, "sha512-XxAZRPWGwO5JwJtS83bRdoIhCiYIx8Vhr+u231pQAsdFIAbm19rSVJLdnBN+Avvk7CKvNQE/nJ4y7uqKH6WTiw=="],
 
+    "@simple-libs/stream-utils": ["@simple-libs/stream-utils@2.0.0", "", {}, "sha512-fCTuZK4QBa+39Oz9l4OGfJfz+GpwCp3AqO7Zch3to99xHPgstVsRFpeQ8LNd2o1Gv8raL2mCFwiaHh7bFSp5DQ=="],
+
     "@simplewebauthn/browser": ["@simplewebauthn/browser@13.1.0", "", {}, "sha512-WuHZ/PYvyPJ9nxSzgHtOEjogBhwJfC8xzYkPC+rR/+8chl/ft4ngjiK8kSU5HtRJfczupyOh33b25TjYbvwAcg=="],
 
     "@sindresorhus/is": ["@sindresorhus/is@4.6.0", "", {}, "sha512-t09vSN3MdfsyCHoFcTRCH/iUtG7OJ0CsjzB8cjAmKc/va/kIgeDI/TxsigdncE/4be734m0cvIYwNaV4i2XqAw=="],
@@ -386,6 +390,8 @@
     "any-promise": ["any-promise@1.3.0", "", {}, "sha512-7UvmKalWRt1wgjL1RrGxoSJW/0QZFIegpeGvZG9kjp8vrRu55XTHbwnqq2GpXm9uLbcuhxm3IqX9OB4MZR1b2A=="],
 
     "argparse": ["argparse@2.0.1", "", {}, "sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q=="],
+
+    "argue-cli": ["argue-cli@3.1.0", "", {}, "sha512-DhBpBfXL4SS2uC0N922MMajKR3CdrTG0u2or1PNYgXMsrSzViJrbtvT0nCLlLGUI0plam/ZZCs7aAauHtW9thw=="],
 
     "argv-formatter": ["argv-formatter@1.0.0", "", {}, "sha512-F2+Hkm9xFaRg+GkaNnbwXNDV5O6pnCFEmqyhvfC/Ic5LbgOWjJh3L+mN/s91rxVL3znE7DYVpW0GJFT+4YBgWw=="],
 
@@ -501,7 +507,7 @@
 
     "conventional-commits-filter": ["conventional-commits-filter@5.0.0", "", {}, "sha512-tQMagCOC59EVgNZcC5zl7XqO30Wki9i9J3acbUvkaosCT6JX3EeFwJD7Qqp4MCikRnzS18WXV3BLIQ66ytu6+Q=="],
 
-    "conventional-commits-parser": ["conventional-commits-parser@6.1.0", "", { "dependencies": { "meow": "^13.0.0" }, "bin": { "conventional-commits-parser": "dist/cli/index.js" } }, "sha512-5nxDo7TwKB5InYBl4ZC//1g9GRwB/F3TXOGR9hgUjMGfvSP4Vu5NkpNro2+1+TIEy1vwxApl5ircECr2ri5JIw=="],
+    "conventional-commits-parser": ["conventional-commits-parser@7.1.2", "", { "dependencies": { "@simple-libs/stream-utils": "^2.0.0", "argue-cli": "^3.1.0" }, "bin": { "conventional-commits-parser": "./dist/cli/index.js" } }, "sha512-O+x4N2yH+ijvqWlIyTHsXTAP+algNWgGbjY2duCe8w2vUMvUB95cLRslCPfTMQyLAKlet3bhZTdu6ozn4M+QJQ=="],
 
     "convert-hrtime": ["convert-hrtime@5.0.0", "", {}, "sha512-lOETlkIeYSJWcbbcvjRKGxVMXJR+8+OQb/mTPbA4ObPMytYIsUbuOE0Jzy60hjARYszq1id0j8KgVhC+WGZVTg=="],
 
@@ -1215,7 +1221,9 @@
 
     "@cardano-sdk/key-management/@cardano-sdk/util": ["@cardano-sdk/util@0.17.2", "", { "dependencies": { "bech32": "^2.0.0", "lodash": "^4.17.21", "serialize-error": "^8", "ts-custom-error": "^3.2.0", "ts-log": "^2.2.4" } }, "sha512-LdY33OQG5H4p0rppHtjnM+akc1poKhz+02T9zsXsbShfTbeU9HXlA0nJ8xj9FNZMs+ozDR0HWrUjDc7fkNZI7w=="],
 
-    "@commitlint/config-conventional/conventional-changelog-conventionalcommits": ["conventional-changelog-conventionalcommits@7.0.2", "", { "dependencies": { "compare-func": "^2.0.0" } }, "sha512-NKXYmMR/Hr1DevQegFB4MwfM5Vv0m4UIxKZTTYuD98lpTknaZlSRrDOG4X7wIXpGkfsYxZTghUN+Qq+T0YQI7w=="],
+    "@commitlint/config-conventional/@commitlint/types": ["@commitlint/types@21.2.0", "", { "dependencies": { "conventional-commits-parser": "^7.0.0", "picocolors": "^1.1.1" } }, "sha512-7zVFCDB2reMvJH5dmbKnOQPjZEvjdJTH8jc0U/PIPU1r3/+vf5pD1HlfitV2MWsWXrvu7u39iY1lyLUPOaN0Gw=="],
+
+    "@commitlint/config-conventional/conventional-changelog-conventionalcommits": ["conventional-changelog-conventionalcommits@10.4.0", "", { "dependencies": { "@conventional-changelog/template": "^1.4.0" } }, "sha512-Rriac6ZrAlVm6cy9Bz4NSp+WMHpwNXoPIYex+HjCgduAVUSbnew29DQjQw0C4g9u3HtSYzGiGY+pdBXAZo+4aA=="],
 
     "@commitlint/parse/conventional-changelog-angular": ["conventional-changelog-angular@7.0.0", "", { "dependencies": { "compare-func": "^2.0.0" } }, "sha512-ROjNchA9LgfNMTTFSIWPzebCwOGFdgkEq45EnvvrmSLvCtAw0HSmrCs7/ty+wAeYUZyNay0YMUNYFTRL72PkBQ=="],
 
@@ -1231,7 +1239,11 @@
 
     "@pnpm/network.ca-file/graceful-fs": ["graceful-fs@4.2.10", "", {}, "sha512-9ByhssR2fPVsNZj478qUUbKfmL0+t5BDVyjShtyZZLiK7ZDAArFFfopyOTj0M05wE2tJPisA4iTnnXl2YoPvOA=="],
 
+    "@semantic-release/commit-analyzer/conventional-commits-parser": ["conventional-commits-parser@6.1.0", "", { "dependencies": { "meow": "^13.0.0" }, "bin": { "conventional-commits-parser": "dist/cli/index.js" } }, "sha512-5nxDo7TwKB5InYBl4ZC//1g9GRwB/F3TXOGR9hgUjMGfvSP4Vu5NkpNro2+1+TIEy1vwxApl5ircECr2ri5JIw=="],
+
     "@semantic-release/npm/execa": ["execa@9.5.2", "", { "dependencies": { "@sindresorhus/merge-streams": "^4.0.0", "cross-spawn": "^7.0.3", "figures": "^6.1.0", "get-stream": "^9.0.0", "human-signals": "^8.0.0", "is-plain-obj": "^4.1.0", "is-stream": "^4.0.1", "npm-run-path": "^6.0.0", "pretty-ms": "^9.0.0", "signal-exit": "^4.1.0", "strip-final-newline": "^4.0.0", "yoctocolors": "^2.0.0" } }, "sha512-EHlpxMCpHWSAh1dgS6bVeoLAXGnJNdR93aabr4QCGbzOM73o5XmRfM/e5FUqsw3aagP8S8XEWUWFAxnRBnAF0Q=="],
+
+    "@semantic-release/release-notes-generator/conventional-commits-parser": ["conventional-commits-parser@6.1.0", "", { "dependencies": { "meow": "^13.0.0" }, "bin": { "conventional-commits-parser": "dist/cli/index.js" } }, "sha512-5nxDo7TwKB5InYBl4ZC//1g9GRwB/F3TXOGR9hgUjMGfvSP4Vu5NkpNro2+1+TIEy1vwxApl5ircECr2ri5JIw=="],
 
     "@semantic-release/release-notes-generator/get-stream": ["get-stream@7.0.1", "", {}, "sha512-3M8C1EOFN6r8AMUhwUAACIoXZJEOufDU5+0gFFN5uNs6XYOralD2Pqkl7m046va6x77FwposWXbAhPPIOus7mQ=="],
 
@@ -1252,8 +1264,6 @@
     "cliui/wrap-ansi": ["wrap-ansi@7.0.0", "", { "dependencies": { "ansi-styles": "^4.0.0", "string-width": "^4.1.0", "strip-ansi": "^6.0.0" } }, "sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q=="],
 
     "conventional-changelog-writer/meow": ["meow@13.2.0", "", {}, "sha512-pxQJQzB6djGPXh08dacEloMFopsOqGVRKFPYvPOt9XDZ1HasbgDZA74CJGreSU4G3Ak7EFJGoiH2auq+yXISgA=="],
-
-    "conventional-commits-parser/meow": ["meow@13.2.0", "", {}, "sha512-pxQJQzB6djGPXh08dacEloMFopsOqGVRKFPYvPOt9XDZ1HasbgDZA74CJGreSU4G3Ak7EFJGoiH2auq+yXISgA=="],
 
     "create-hash/ripemd160": ["ripemd160@2.0.2", "", { "dependencies": { "hash-base": "^3.0.0", "inherits": "^2.0.1" } }, "sha512-ii4iagi25WusVoiC4B4lq7pbXfAp3D9v5CwfkY33vffw2+pkDjY1D8GaN7spsxvCSx8dkPqOZCEZyfxcmJG2IA=="],
 
@@ -1719,11 +1729,15 @@
 
     "@octokit/plugin-throttling/@octokit/types/@octokit/openapi-types": ["@octokit/openapi-types@24.2.0", "", {}, "sha512-9sIH3nSUttelJSXUrmGzl7QUBFul0/mB8HRYl3fOlgHbIWG+WnYDXU3v/2zMtAvuzZ/ed00Ei6on975FhBfzrg=="],
 
+    "@semantic-release/commit-analyzer/conventional-commits-parser/meow": ["meow@13.2.0", "", {}, "sha512-pxQJQzB6djGPXh08dacEloMFopsOqGVRKFPYvPOt9XDZ1HasbgDZA74CJGreSU4G3Ak7EFJGoiH2auq+yXISgA=="],
+
     "@semantic-release/npm/execa/get-stream": ["get-stream@9.0.1", "", { "dependencies": { "@sec-ant/readable-stream": "^0.4.1", "is-stream": "^4.0.1" } }, "sha512-kVCxPF3vQM/N0B1PmoqVUqgHP+EeVjmZSQn+1oCRPxd2P21P2F19lIgbR3HBosbB1PUhOAoctJnfEn2GbN2eZA=="],
 
     "@semantic-release/npm/execa/pretty-ms": ["pretty-ms@9.2.0", "", { "dependencies": { "parse-ms": "^4.0.0" } }, "sha512-4yf0QO/sllf/1zbZWYnvWw3NxCQwLXKzIj0G849LSufP15BXKM0rbD2Z3wVnkMfjdn/CB0Dpp444gYAACdsplg=="],
 
     "@semantic-release/npm/execa/yoctocolors": ["yoctocolors@2.1.1", "", {}, "sha512-GQHQqAopRhwU8Kt1DDM8NjibDXHC8eoh1erhGAJPEyveY9qqVeXvVikNKrDz69sHowPMorbPUrH/mx8c50eiBQ=="],
+
+    "@semantic-release/release-notes-generator/conventional-commits-parser/meow": ["meow@13.2.0", "", {}, "sha512-pxQJQzB6djGPXh08dacEloMFopsOqGVRKFPYvPOt9XDZ1HasbgDZA74CJGreSU4G3Ak7EFJGoiH2auq+yXISgA=="],
 
     "bl/readable-stream/string_decoder": ["string_decoder@1.3.0", "", { "dependencies": { "safe-buffer": "~5.2.0" } }, "sha512-hkRX8U1WjJFd8LsDJ2yQ/wWWxaopEsABU1XfkM8A+j0+85JAGppt16cr1Whg6KIbb4okU6Mql6BOj+uup/wKeA=="],
 
