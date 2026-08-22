@@ -1,0 +1,31 @@
+version: 2
+
+# This project installs with bun, so bun.lock is the real build input.
+#
+# Two Dependabot features are configured separately, and only one of them
+# supports bun today:
+#
+#   Version updates (this file)  : bun IS supported, so the entries below open
+#                                  weekly PRs for outdated dependencies.
+#   Security alerts and security
+#   update PRs                   : bun is NOT supported. GitHub's dependency
+#                                  graph static analysis does not parse
+#                                  bun.lock, so alerts come only from the
+#                                  legacy yarn.lock that is still committed.
+#
+# yarn.lock is stale and is not used to install. It is kept deliberately for
+# now, because deleting it would remove the only source of transitive
+# vulnerability alerts and leave a false clean. Restoring real scanning needs
+# a dependency submission workflow that posts an SBOM built from bun.lock.
+# Delete yarn.lock only after that submission is confirmed populating the
+# dependency graph, so there is never a window with no coverage.
+updates:
+  - package-ecosystem: "bun"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
