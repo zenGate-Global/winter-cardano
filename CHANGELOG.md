@@ -1,3 +1,20 @@
+## [3.0.0](https://github.com/zenGate-Global/winter-cardano/compare/v2.0.1...v3.0.0) (2026-08-26)
+
+### ⚠ BREAKING CHANGES
+
+* the script hash changes, so the contract address and the
+minting policy id change. A commodity minted by an earlier version stays
+at the old address, and it needs version 2.0.1 to spend.
+
+mainnet addr1wx0u9dyeeex4nsgp6pk3qaq92s5ap3xc56edsk3hlgdhjnce8qkjd
+now     addr1w8dmzvsy5mhpx4x5leggtk96yvvrftmfsp7z3jxu20623gsrv9np4
+preview addr_test1wph2wcr4ysaen987g87magjh96l2ymvrgyvnu6yjvrtahdqu7qvqy
+now     addr_test1wpfc7e7zqlqtra8hnyq7k0hh3rdwjm7m0fnzuyqjl0xxt3gatmv8f
+
+### Features
+
+* ship the silent trace validators ([#34](https://github.com/zenGate-Global/winter-cardano/issues/34)) ([260f1bc](https://github.com/zenGate-Global/winter-cardano/commit/260f1bcbe84a71f58e534b37de58e13f0d281dc1))
+
 ## [2.0.1](https://github.com/zenGate-Global/winter-cardano/compare/v2.0.0...v2.0.1) (2026-08-22)
 
 ### Bug Fixes
